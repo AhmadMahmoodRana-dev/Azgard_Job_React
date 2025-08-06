@@ -1,13 +1,8 @@
-// JobListPage.jsx
 import React from "react";
-import {
-  FaLinkedinIn,
-  FaTwitter,
-  FaFacebookF,
-  FaUserFriends,
-} from "react-icons/fa";
-import { MdWorkOutline } from "react-icons/md";
+import { FaLinkedinIn, FaTwitter, FaFacebookF, FaUsers } from "react-icons/fa";
 import { HiOutlineDesktopComputer } from "react-icons/hi";
+import { MdOutlinePeople } from "react-icons/md";
+
 
 const jobs = [
   {
@@ -39,9 +34,9 @@ const jobs = [
 
 const JobList = () => {
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col items-center py-10 px-4">
+    <div className="bg-[#f5f5f3] min-h-screen flex flex-col items-center py-10 px-4">
       {/* Header */}
-      <header className="w-full max-w-4xl flex justify-between items-center mb-6">
+      <header className="w-full max-w-7xl flex justify-between items-center mb-6">
         <div className="text-2xl font-bold flex items-center space-x-2">
           <div className="bg-black text-white px-3 py-2 rounded">DigiU</div>
         </div>
@@ -58,31 +53,43 @@ const JobList = () => {
         </div>
       </header>
 
-      {/* Job Section */}
-      <div className="w-full max-w-4xl bg-white shadow-md rounded-md p-6">
-        <h2 className="text-xl font-semibold text-green-800 mb-2">
+      {/* Job Listings */}
+      <div className="w-full max-w-7xl bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-2xl font-serif tracking-wide font-semibold text-[#2e7918] mb-2">
           Current Openings
         </h2>
         <p className="text-sm text-gray-600 mb-4">
           Thanks for checking out our job openings. See something that interests you? Apply here.
         </p>
-        <div className="space-y-4">
+
+        <hr className="border-gray-300 mb-2" />
+
+        <div className="divide-y divide-gray-200">
           {jobs.map((job, idx) => (
-            <div
-              key={idx}
-              className="border-t pt-4 flex justify-between items-start text-sm"
-            >
-              <a href="#" className="text-blue-600 hover:underline font-medium">
-                {job.title}
-              </a>
-              <div className="text-gray-500 flex flex-col sm:flex-row sm:space-x-6 text-xs">
-                <div className="flex items-center space-x-1">
-                  <HiOutlineDesktopComputer />
+            <div key={idx} className="py-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+              {/* Title */}
+              <div>
+                <a
+                  href="/"
+                  className="text-[#0b4fd1] font-medium text-[16px] hover:underline"
+                >
+                  {job.title}
+                </a>
+              </div>
+
+              {/* Location */}
+              <div className="flex flex-col items-start ">
+                <div className="flex items-center gap-1 text-gray-700 text-md">
+                  <HiOutlineDesktopComputer size={18} />
                   <span>Remote</span>
                 </div>
-                <div>{job.location}</div>
-                <div className="flex items-center space-x-1">
-                  <FaUserFriends />
+                <div className="text-sm text-gray-600 mt-1 ml-6">{job.location}</div>
+              </div>
+
+              {/* Job Type */}
+              <div className="flex justify-start">
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <MdOutlinePeople size={18} />
                   <span>{job.type}</span>
                 </div>
               </div>
@@ -93,9 +100,7 @@ const JobList = () => {
 
       {/* Footer */}
       <footer className="mt-10 text-xs text-gray-500">
-        <p>
-          Privacy Policy • Terms of Service • © BambooHR All rights reserved.
-        </p>
+        <p>Privacy Policy • Terms of Service • © BambooHR All rights reserved.</p>
       </footer>
     </div>
   );
