@@ -278,7 +278,7 @@ const JobDetail = () => {
                     {/* Refer */}
                     <div>
                       <label className="block text-sm font-medium mb-1">
-                        Refer*
+                        Any Reference in Azgard 9*
                       </label>
                       <input
                         type="text"
