@@ -1,139 +1,31 @@
-// import { FaLinkedin } from "react-icons/fa6";
-// import { FaTwitter,FaFacebookF  } from "react-icons/fa";
-
-// const JobDetail = () => {
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-6 flex justify-center">
-//       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-//         {/* Main Content */}
-//         <div className="lg:col-span-2 bg-white rounded-xl shadow p-6">
-//           <h2 className="text-2xl font-bold tracking-wide font-serif text-[#2e7918] mb-2">
-//             Customer Service Representative
-//           </h2>
-//           <p className="text-gray-600 mb-6">Lahore (Remote)</p>
-
-//           <hr className="mb-6" />
-
-//           <div className="mb-6">
-//             <h3 className="font-semibold text-gray-800 mb-2">
-//               What you'll be doing
-//             </h3>
-//             <ul className="list-disc list-inside space-y-2 text-gray-700 md:text-sm text-xs  md:pl-12">
-//               <li>
-//                 Contact customers via phone, email and letter to identify them &
-//                 collect outstanding payments.
-//               </li>
-//               <li>
-//                 Trace individuals who have skipped on their financial
-//                 obligations using various research techniques
-//               </li>
-//               <li>Negotiate payment plans and settlements with customers</li>
-//               <li>
-//                 Trace individuals/businesses and call them to confirm their
-//                 current addresses and notify them about illegal use of energy
-//               </li>
-//               <li>
-//                 Maintain accurate records and documentation of all customer
-//                 interactions
-//               </li>
-//               <li>Escalate unresolved cases to the relevant stakeholders</li>
-//               <li>
-//                 Provide excellent customer service and maintain a professional
-//                 demeanor at all times
-//               </li>
-//             </ul>
-//           </div>
-
-//           <div>
-//             <h3 className="font-semibold text-gray-800 mb-2">
-//               What we're looking for
-//             </h3>
-//             <ul className="list-disc list-inside space-y-2 text-gray-700 md:text-sm text-xs md:pl-12">
-//               <li>
-//                 Proven experience in a collections or skip tracing role,
-//                 preferably in the call center or customer service industry
-//               </li>
-//               <li>Energy industry experience is a bonus</li>
-//               <li>Strong negotiation and conflict resolution skills</li>
-//               <li>Excellent communication and interpersonal abilities</li>
-//               <li>
-//                 Attention to detail and the ability to accurately maintain
-//                 records
-//               </li>
-//               <li>
-//                 Familiarity with debt collection legislation and regulations
-//               </li>
-//               <li>Proficient in using various research tools and databases</li>
-//             </ul>
-//           </div>
-//         </div>
-
-//         {/* Sidebar */}
-//         <div>
-//           <div className="bg-white rounded-xl shadow p-10 flex flex-col justify-between">
-//             <button className="w-full bg-green-700 text-white text-xl py-3 rounded-full font-medium hover:bg-green-800 transition mb-6">
-//               Apply for This Job
-//             </button>
-//             <hr className="mb-6" />
-
-//             <div className="mb-6">
-//               <p className="text-sm font-medium text-gray-600 mb-1">
-//                 Link to This Job
-//               </p>
-//               <input
-//                 type="text"
-//                 value="https://digiu.bamboohr.com/careers/32"
-//                 readOnly
-//                 className="w-full border border-gray-300 rounded-full px-3 py-2 text-sm text-gray-700"
-//               />
-//             </div>
-//             <div className="flex space-x-8 justify-center mb-6">
-//               <button className="text-gray-500 border border-gray-400 hover:border-black transition-all ease-in-out duration-300 px-4 py-3 rounded-full hover:text-black">
-//                 <i className="fab fa-linkedin"><FaLinkedin/></i>
-//               </button>
-//               <button className="text-gray-500 border border-gray-400 hover:border-black transition-all ease-in-out duration-300 px-4 py-3 rounded-full hover:text-black">
-//                 <i className="fab fa-twitter"><FaTwitter/></i>
-//               </button>
-//               <button className="text-gray-500 border border-gray-400 hover:border-black transition-all ease-in-out duration-300 px-4 py-3 rounded-full hover:text-black">
-//                 <i className="fab fa-facebook"><FaFacebookF/></i>
-//               </button>
-//             </div>
-//           </div>
-//           <div className="rounded-xl  p-6 flex flex-col justify-between">
-//             <div>
-//                 <h1 className="text-gray-500 text-sm">Location</h1>
-//                 <p className="text-gray-700 text-md  font-semibold">Lahore (Remote)</p>
-//                 <hr className="my-2 border-gray-300" />
-//             </div>
-//             <div>
-//                 <h1 className="text-gray-500 text-sm">Employment Type</h1>
-//                 <p className="text-gray-700 text-md  font-semibold">Full-Time</p>
-//                 <hr className="my-2 border-gray-300" />
-//             </div>
-//             <div>
-//                 <h1 className="text-gray-500 text-sm">Minimum Experience</h1>
-//                 <p className="text-gray-700 text-md  font-semibold">Mid-level</p>
-//                 <hr className="my-2 border-gray-300" />
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default JobDetail;
-
 import { useState } from "react";
 import { FaLinkedin, FaTwitter, FaFacebookF } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoIosArrowBack } from "react-icons/io";
 import { Link, useLocation } from "react-router-dom";
 import { MdOutlineCheckCircleOutline } from "react-icons/md";
+import Select from 'react-select';
+
 
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
   const location = useLocation();
+  const [selectedCountry, setSelectedCountry] = useState({
+    value: "pakistan",
+    label: "Pakistan",
+  });
+  const countryOptions = [
+    { value: "nicaragua", label: "Nicaragua" },
+    { value: "niger", label: "Niger" },
+    { value: "nigeria", label: "Nigeria" },
+    { value: "niue", label: "Niue" },
+    { value: "norfolk-island", label: "Norfolk Island" },
+    { value: "northern-mariana-islands", label: "Northern Mariana Islands" },
+    { value: "norway", label: "Norway" },
+    { value: "oman", label: "Oman" },
+    { value: "pakistan", label: "Pakistan" },
+  ];
+
   console.log("Current Path:", location.pathname); // e.g. /dashboard
   console.log("Search Params:", location.search); // e.g. ?query=abc
   console.log("Hash:", location.hash); // e.g. #section
@@ -263,6 +155,16 @@ const JobDetail = () => {
                       </div>
                     </div>
 
+                    {/* Cnic */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Cnic*
+                      </label>
+                      <input
+                        type="text"
+                        className="border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]"
+                      />
+                    </div>
                     {/* Email */}
                     <div>
                       <label className="block text-sm font-medium mb-1">
@@ -328,13 +230,17 @@ const JobDetail = () => {
                     </div>
 
                     {/* Country */}
-                    <div>
+                    <div className="w-[45%]">
                       <label className="block text-sm font-medium mb-1">
                         Country*
                       </label>
-                      <select className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2">
-                        <option>Pakistan</option>
-                      </select>
+                      <Select
+                        defaultValue={selectedCountry}
+                        onChange={setSelectedCountry}
+                        options={countryOptions}
+                        className="text-sm"
+                        classNamePrefix="react-select"
+                      />
                     </div>
 
                     {/* File Upload */}
@@ -363,6 +269,16 @@ const JobDetail = () => {
                     <div>
                       <label className="block text-sm font-medium mb-1">
                         Desired Pay*
+                      </label>
+                      <input
+                        type="text"
+                        className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
+                      />
+                    </div>
+                    {/* Refer */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Refer*
                       </label>
                       <input
                         type="text"
@@ -463,11 +379,9 @@ const JobDetail = () => {
               Privacy Policy •
             </span>
             <span className="hover:underline cursor-pointer">
-            Terms of Service •
+              Terms of Service •
             </span>
-            <span>
-             © BambooHR All rights reserved.
-            </span>
+            <span>© BambooHR All rights reserved.</span>
           </div>
         </div>
       )}
