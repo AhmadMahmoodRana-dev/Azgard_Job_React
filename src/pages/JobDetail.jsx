@@ -233,7 +233,7 @@ const JobDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow p-6 relative overflow-hidden">
             <Link
-              to={`/joblist`}
+              to={`/`}
               className="flex items-center gap-3 text-[#676260] text-[15px] font-medium mb-3"
             >
               <IoIosArrowBack />
