@@ -55,21 +55,33 @@ const JobDetail = () => {
     if (cleaned.length <= 12) return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}`;
     return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(12, 13)}`;
   };
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    
-    if (name === "cnic") {
-      const formatted = formatCnic(value);
-      setFormData(prev => ({ ...prev, [name]: formatted }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+  if (name === "cnic") {
+    const formatted = formatCnic(value);
+    setFormData((prev) => ({ ...prev, [name]: formatted }));
+  } else if (name === "phone") {
+    // Allow only + and digits
+    let phone = value.replace(/[^\d+]/g, '');
+    // Ensure only one "+" at the beginning
+    if (phone.includes("+")) {
+      phone = "+" + phone.replace(/\+/g, "").slice(0, 15);
     }
-    
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
-  };
+    setFormData((prev) => ({ ...prev, [name]: phone }));
+  } else if (name === "currentSalary" || name === "expectedSalary") {
+    const numericValue = value.replace(/\D/g, "");
+    const formattedValue = new Intl.NumberFormat().format(numericValue);
+    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+  } else {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+
+  if (errors[name]) {
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  }
+};
+
 
   const handleFileChange = (e) => {
     setResumeFile(e.target.files[0]);
