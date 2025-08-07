@@ -741,7 +741,7 @@ const JobDetail = () => {
                 </p>
                 <input
                   type="text"
-                  value={`https://azgard-job.vercel.app/${location.pathname}`}
+                  value={`https://azgard-job.vercel.app${location.pathname}`}
                   readOnly
                   className="w-full border border-gray-300 rounded-full px-3 py-2 text-sm text-gray-700"
                 />
