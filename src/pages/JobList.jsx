@@ -38,10 +38,10 @@ const JobList = () => {
       {/* Header */}
       <header className="w-full max-w-7xl flex justify-between items-center mb-6">
         <div className="text-2xl font-bold flex items-center space-x-2">
-          <div className="bg-black text-white px-3 py-2 rounded">DigiU</div>
+          {/* <div className="bg-black text-white px-3 py-2 rounded">DigiU</div> */}
         </div>
         <div className="flex space-x-3">
-          <button className="p-2 border rounded-full">
+          <button className="p-2 px-4 border rounded-full border-[#48413f]">
             <FaLinkedinIn />
           </button>
           <button className="p-2 border rounded-full">
@@ -100,7 +100,7 @@ const JobList = () => {
 
       {/* Footer */}
       <footer className="mt-10 text-xs text-gray-500">
-        <p>Privacy Policy • Terms of Service • © BambooHR All rights reserved.</p>
+        <p>Privacy Policy • Terms of Service • © Azgard9 All rights reserved.</p>
       </footer>
     </div>
   );
