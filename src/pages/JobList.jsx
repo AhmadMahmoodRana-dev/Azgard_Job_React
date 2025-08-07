@@ -1,38 +1,29 @@
-import React from "react";
+import axios from "axios";
+import { useEffect, useState } from "react";
 import { FaLinkedinIn, FaTwitter, FaFacebookF, FaUsers } from "react-icons/fa";
 import { HiOutlineDesktopComputer } from "react-icons/hi";
 import { MdOutlinePeople } from "react-icons/md";
-
-
-const jobs = [
-  {
-    title: "Customer Service Representative",
-    location: "Lahore (Remote)",
-    type: "Full-Time",
-  },
-  {
-    title: "Digital Business Analyst",
-    location: "Lahore, Punjab (Remote)",
-    type: "Full-Time",
-  },
-  {
-    title: "Operations Analyst",
-    location: "Lahore, Punjab (Remote)",
-    type: "Full-Time",
-  },
-  {
-    title: "Quality Assurance Tester",
-    location: "Lahore (Remote)",
-    type: "Full-Time",
-  },
-  {
-    title: "Software Engineer (Full Stack)",
-    location: "Lahore (Remote)",
-    type: "Full-Time",
-  },
-];
+import { Link } from "react-router-dom";
 
 const JobList = () => {
+  const [jobList,setJobList] = useState([]);
+  
+  
+  const fetchList = async () =>{
+    try {
+      const {data} = await axios.get("https://adt.azgard9.com:8443/ords/azhcm/Get_Job_Postings_Careers/GET");
+      console.log("Job List Data:", data);
+      setJobList(data?.Job_Posting)
+      
+      // setJobList(data)
+    } catch (error) {
+      console.error("Error fetching job list:", error);
+    }
+  }
+  
+  useEffect(() =>{
+  fetchList()
+  },[])
   return (
     <div className="bg-[#f5f5f3] min-h-screen flex flex-col items-center py-10 px-4">
       {/* Header */}
@@ -41,13 +32,13 @@ const JobList = () => {
           {/* <div className="bg-black text-white px-3 py-2 rounded">DigiU</div> */}
         </div>
         <div className="flex space-x-3">
-          <button className="p-2 px-4 border rounded-full border-[#48413f]">
+          <button className="py-3 px-4 border rounded-full border-[#48413f]">
             <FaLinkedinIn />
           </button>
-          <button className="p-2 border rounded-full">
+          <button className="py-3 px-4 border rounded-full border-[#48413f]">
             <FaTwitter />
           </button>
-          <button className="p-2 border rounded-full">
+          <button className="py-3 px-4 border rounded-full border-[#48413f]">
             <FaFacebookF />
           </button>
         </div>
@@ -65,32 +56,32 @@ const JobList = () => {
         <hr className="border-gray-300 mb-2" />
 
         <div className="divide-y divide-gray-200">
-          {jobs.map((job, idx) => (
+          {jobList.map((job, idx) => (
             <div key={idx} className="py-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
               {/* Title */}
               <div>
-                <a
-                  href="/"
-                  className="text-[#0b4fd1] font-medium text-[16px] hover:underline"
+                <Link
+                  to={`/jobdetail/${job?.ID}`}
+                  className="text-[#0b4fd1] font-medium text-[16px] hover:underline capitalize"
                 >
-                  {job.title}
-                </a>
+                  {job?.TITLE}
+                </Link>
               </div>
 
               {/* Location */}
               <div className="flex flex-col items-start ">
                 <div className="flex items-center gap-1 text-gray-700 text-md">
                   <HiOutlineDesktopComputer size={18} />
-                  <span>Remote</span>
+                  <span>{job?.JOB_TYPE}</span>
                 </div>
-                <div className="text-sm text-gray-600 mt-1 ml-6">{job.location}</div>
+                <div className="text-sm text-gray-600 mt-1 ml-6">{job?.LOCATION} ({job?.JOB_TYPE})</div>
               </div>
 
               {/* Job Type */}
               <div className="flex justify-start">
                 <div className="flex items-center gap-1 text-sm text-gray-600">
                   <MdOutlinePeople size={18} />
-                  <span>{job.type}</span>
+                  <span>{job?.WORK_SCHEDULE}</span>
                 </div>
               </div>
             </div>

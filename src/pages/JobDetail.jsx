@@ -2,17 +2,18 @@ import { useState, useEffect } from "react";
 import { FaLinkedin, FaTwitter, FaFacebookF } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoIosArrowBack } from "react-icons/io";
-import { Link} from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { MdOutlineCheckCircleOutline } from "react-icons/md";
-import Select from 'react-select';
+import Select from "react-select";
+import axios from "axios";
 
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState({
     value: "pakistan",
-    label: "Pakistan"
+    label: "Pakistan",
   });
-  
+
   // Form state
   const [formData, setFormData] = useState({
     firstName: "",
@@ -29,14 +30,14 @@ const JobDetail = () => {
     currentDesignation: "",
     currentSalary: "",
     expectedSalary: "",
-    reference: ""
+    reference: "",
   });
-  
+
   const [errors, setErrors] = useState({});
   const [resumeFile, setResumeFile] = useState(null);
   const [availableFrom, setAvailableFrom] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  
+
   const countryOptions = [
     { value: "nicaragua", label: "Nicaragua" },
     { value: "niger", label: "Niger" },
@@ -50,38 +51,41 @@ const JobDetail = () => {
   ];
 
   const formatCnic = (value) => {
-    const cleaned = value.replace(/\D/g, '');
+    const cleaned = value.replace(/\D/g, "");
     if (cleaned.length <= 5) return cleaned;
-    if (cleaned.length <= 12) return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}`;
-    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(12, 13)}`;
+    if (cleaned.length <= 12)
+      return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}`;
+    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(
+      12,
+      13
+    )}`;
   };
-const handleInputChange = (e) => {
-  const { name, value } = e.target;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
 
-  if (name === "cnic") {
-    const formatted = formatCnic(value);
-    setFormData((prev) => ({ ...prev, [name]: formatted }));
-  } else if (name === "phone") {
-    // Allow only + and digits
-    let phone = value.replace(/[^\d+]/g, '');
-    // Ensure only one "+" at the beginning
-    if (phone.includes("+")) {
-      phone = "+" + phone.replace(/\+/g, "").slice(0, 15);
+    if (name === "cnic") {
+      const formatted = formatCnic(value);
+      setFormData((prev) => ({ ...prev, [name]: formatted }));
+    } else if (name === "phone") {
+      // Allow only + and digits
+      let phone = value.replace(/[^\d+]/g, "");
+      // Ensure only one "+" at the beginning
+      if (phone.includes("+")) {
+        phone = "+" + phone.replace(/\+/g, "").slice(0, 15);
+      }
+      setFormData((prev) => ({ ...prev, [name]: phone }));
+    } else if (name === "currentSalary" || name === "expectedSalary") {
+      const numericValue = value.replace(/\D/g, "");
+      const formattedValue = new Intl.NumberFormat().format(numericValue);
+      setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
-    setFormData((prev) => ({ ...prev, [name]: phone }));
-  } else if (name === "currentSalary" || name === "expectedSalary") {
-    const numericValue = value.replace(/\D/g, "");
-    const formattedValue = new Intl.NumberFormat().format(numericValue);
-    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
-  } else {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  }
 
-  if (errors[name]) {
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  }
-};
-
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
 
   const handleFileChange = (e) => {
     setResumeFile(e.target.files[0]);
@@ -91,33 +95,43 @@ const handleInputChange = (e) => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const cnicRegex = /^\d{5}-\d{7}-\d{1}$/;
-    
+
     // Required fields validation
     const requiredFields = [
-      'firstName', 'lastName', 'cnic', 'email', 'phone', 
-      'address', 'city', 'province', 'postalCode',
-      'highestEducation', 'currentEmployer', 'currentDesignation',
-      'currentSalary', 'expectedSalary'
+      "firstName",
+      "lastName",
+      "cnic",
+      "email",
+      "phone",
+      "address",
+      "city",
+      "province",
+      "postalCode",
+      "highestEducation",
+      "currentEmployer",
+      "currentDesignation",
+      "currentSalary",
+      "expectedSalary",
     ];
-    
-    requiredFields.forEach(field => {
+
+    requiredFields.forEach((field) => {
       if (!formData[field].trim()) {
         newErrors[field] = "This field is required";
       }
     });
-    
+
     // CNIC validation
     if (formData.cnic && !cnicRegex.test(formData.cnic)) {
       newErrors.cnic = "CNIC must be in format XXXXX-XXXXXXX-X";
     }
-    
+
     // Email validation
     if (formData.email && !emailRegex.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
-    
+
     // Phone validation - only requires '+' prefix
-    if (formData.phone && !formData.phone.startsWith('+')) {
+    if (formData.phone && !formData.phone.startsWith("+")) {
       newErrors.phone = "Phone must start with '+'";
     }
 
@@ -128,9 +142,11 @@ const handleInputChange = (e) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Form submitted:", { ...formData, resumeFile, availableFrom });
+      console.log("Form submitted:", { ...formData });
+      console.log("Form submitted resumeFile:", { resumeFile });
+      console.log("Form submitted availableFrom :", { availableFrom });
       setSubmitted(true);
-      
+
       setTimeout(() => {
         setShowForm(false);
         setFormData({
@@ -148,7 +164,7 @@ const handleInputChange = (e) => {
           currentDesignation: "",
           currentSalary: "",
           expectedSalary: "",
-          reference: ""
+          reference: "",
         });
         setResumeFile(null);
         setAvailableFrom("");
@@ -175,13 +191,40 @@ const handleInputChange = (e) => {
         currentDesignation: "",
         currentSalary: "",
         expectedSalary: "",
-        reference: ""
+        reference: "",
       });
       setResumeFile(null);
       setAvailableFrom("");
       setErrors({});
     }
   }, [showForm]);
+
+  // FETCH JOB DETAIL
+
+  const { id } = useParams();
+  const [jobDetail, setJobDetail] = useState([]);
+  const location =useLocation();
+
+  const fetchJobDetail = async () => {
+    try {
+      const { data } = await axios.get(
+        `https://adt.azgard9.com:8443/ords/azhcm/Get_Job_Posting_Detail/GET`,
+        {
+          params: {
+            X_JOB_ID: id,
+          },
+        }
+      );
+      console.log("Job Detail Data:", data?.Job_Details);
+      setJobDetail(data?.Job_Details);
+    } catch (error) {
+      console.error;
+    }
+  };
+
+  useEffect(() => {
+    fetchJobDetail();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 m-6">
@@ -199,9 +242,9 @@ const handleInputChange = (e) => {
               </h1>
             </Link>
             <h2 className="text-2xl font-bold tracking-wide font-serif text-[#2e7918] mb-2">
-              Customer Service Representative
+              {jobDetail[0]?.TITLE}
             </h2>
-            <p className="text-[#48413f] mb-6">Lahore (Remote)</p>
+            <p className="text-[#48413f] mb-6">{jobDetail[0]?.LOCATION} ({jobDetail[0]?.JOB_TYPE})</p>
             <hr className="mb-6" />
             <AnimatePresence mode="wait">
               {!showForm ? (
@@ -212,7 +255,7 @@ const handleInputChange = (e) => {
                   exit={{ x: -500, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="mb-6">
+                  {/* <div className="mb-6">
                     <h3 className="font-semibold text-gray-800 mb-2">
                       What you'll be doing
                     </h3>
@@ -245,9 +288,11 @@ const handleInputChange = (e) => {
                         professional demeanor at all times
                       </li>
                     </ul>
-                  </div>
+                  </div> */
+                  }
+                  {jobDetail[0]?.JOB_DESCRIPTION}
 
-                  <div>
+                  {/* <div>
                     <h3 className="font-semibold text-gray-800 mb-2">
                       What we're looking for
                     </h3>
@@ -274,7 +319,7 @@ const handleInputChange = (e) => {
                         Proficient in using various research tools and databases
                       </li>
                     </ul>
-                  </div>
+                  </div> */}
                 </motion.div>
               ) : (
                 <motion.div
@@ -291,11 +336,15 @@ const handleInputChange = (e) => {
                         Application Submitted!
                       </h3>
                       <p className="text-gray-600">
-                        Thank you for applying. We'll review your application shortly.
+                        Thank you for applying. We'll review your application
+                        shortly.
                       </p>
                     </div>
                   ) : (
-                    <form className="space-y-6 max-w-3xl mx-auto" onSubmit={handleSubmit}>
+                    <form
+                      className="space-y-6 max-w-3xl mx-auto"
+                      onSubmit={handleSubmit}
+                    >
                       {/* First + Last Name */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[70%]">
                         <div>
@@ -307,9 +356,17 @@ const handleInputChange = (e) => {
                             name="firstName"
                             value={formData.firstName}
                             onChange={handleInputChange}
-                            className={`border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
+                            className={`border ${
+                              errors.firstName
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
                           />
-                          {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
+                          {errors.firstName && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.firstName}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -320,9 +377,17 @@ const handleInputChange = (e) => {
                             name="lastName"
                             value={formData.lastName}
                             onChange={handleInputChange}
-                            className={`border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
+                            className={`border ${
+                              errors.lastName
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
                           />
-                          {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
+                          {errors.lastName && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.lastName}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -337,11 +402,17 @@ const handleInputChange = (e) => {
                           value={formData.cnic}
                           onChange={handleInputChange}
                           placeholder="35202-2394453-3"
-                          className={`border ${errors.cnic ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
+                          className={`border ${
+                            errors.cnic ? "border-red-500" : "border-gray-300"
+                          } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
                         />
-                        {errors.cnic && <p className="text-red-500 text-xs mt-1">{errors.cnic}</p>}
+                        {errors.cnic && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.cnic}
+                          </p>
+                        )}
                       </div>
-                      
+
                       {/* Email */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
@@ -352,9 +423,15 @@ const handleInputChange = (e) => {
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          className={`border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
+                          className={`border ${
+                            errors.email ? "border-red-500" : "border-gray-300"
+                          } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
                         />
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                        {errors.email && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.email}
+                          </p>
+                        )}
                       </div>
 
                       {/* Phone */}
@@ -368,9 +445,15 @@ const handleInputChange = (e) => {
                           value={formData.phone}
                           onChange={handleInputChange}
                           placeholder="+[Country Code][Number]"
-                          className={`border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
+                          className={`border ${
+                            errors.phone ? "border-red-500" : "border-gray-300"
+                          } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
                         />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                        {errors.phone && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.phone}
+                          </p>
+                        )}
                       </div>
 
                       {/* Address */}
@@ -383,9 +466,17 @@ const handleInputChange = (e) => {
                           name="address"
                           value={formData.address}
                           onChange={handleInputChange}
-                          className={`border ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
+                          className={`border ${
+                            errors.address
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
                         />
-                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+                        {errors.address && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.address}
+                          </p>
+                        )}
                       </div>
 
                       {/* City, Province, Postal Code */}
@@ -399,9 +490,15 @@ const handleInputChange = (e) => {
                             name="city"
                             value={formData.city}
                             onChange={handleInputChange}
-                            className={`border ${errors.city ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                            className={`border ${
+                              errors.city ? "border-red-500" : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
                           />
-                          {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+                          {errors.city && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.city}
+                            </p>
+                          )}
                         </div>
                         <div className="w-[80%]">
                           <label className="block text-sm font-medium mb-1">
@@ -412,9 +509,17 @@ const handleInputChange = (e) => {
                             name="province"
                             value={formData.province}
                             onChange={handleInputChange}
-                            className={`border ${errors.province ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                            className={`border ${
+                              errors.province
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
                           />
-                          {errors.province && <p className="text-red-500 text-xs mt-1">{errors.province}</p>}
+                          {errors.province && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.province}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -425,9 +530,17 @@ const handleInputChange = (e) => {
                             name="postalCode"
                             value={formData.postalCode}
                             onChange={handleInputChange}
-                            className={`border ${errors.postalCode ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-[50%]`}
+                            className={`border ${
+                              errors.postalCode
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[50%]`}
                           />
-                          {errors.postalCode && <p className="text-red-500 text-xs mt-1">{errors.postalCode}</p>}
+                          {errors.postalCode && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.postalCode}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -456,9 +569,17 @@ const handleInputChange = (e) => {
                             name="highestEducation"
                             value={formData.highestEducation}
                             onChange={handleInputChange}
-                            className={`border ${errors.highestEducation ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                            className={`border ${
+                              errors.highestEducation
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
                           />
-                          {errors.highestEducation && <p className="text-red-500 text-xs mt-1">{errors.highestEducation}</p>}
+                          {errors.highestEducation && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.highestEducation}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -469,9 +590,17 @@ const handleInputChange = (e) => {
                             name="currentEmployer"
                             value={formData.currentEmployer}
                             onChange={handleInputChange}
-                            className={`border ${errors.currentEmployer ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                            className={`border ${
+                              errors.currentEmployer
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
                           />
-                          {errors.currentEmployer && <p className="text-red-500 text-xs mt-1">{errors.currentEmployer}</p>}
+                          {errors.currentEmployer && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.currentEmployer}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -482,9 +611,17 @@ const handleInputChange = (e) => {
                             name="currentDesignation"
                             value={formData.currentDesignation}
                             onChange={handleInputChange}
-                            className={`border ${errors.currentDesignation ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                            className={`border ${
+                              errors.currentDesignation
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
                           />
-                          {errors.currentDesignation && <p className="text-red-500 text-xs mt-1">{errors.currentDesignation}</p>}
+                          {errors.currentDesignation && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.currentDesignation}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -495,9 +632,17 @@ const handleInputChange = (e) => {
                             name="currentSalary"
                             value={formData.currentSalary}
                             onChange={handleInputChange}
-                            className={`border ${errors.currentSalary ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                            className={`border ${
+                              errors.currentSalary
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
                           />
-                          {errors.currentSalary && <p className="text-red-500 text-xs mt-1">{errors.currentSalary}</p>}
+                          {errors.currentSalary && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.currentSalary}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -508,11 +653,18 @@ const handleInputChange = (e) => {
                             name="expectedSalary"
                             value={formData.expectedSalary}
                             onChange={handleInputChange}
-                            className={`border ${errors.expectedSalary ? 'border-red-500' : 'border-gray-300'} rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                            className={`border ${
+                              errors.expectedSalary
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
                           />
-                          {errors.expectedSalary && <p className="text-red-500 text-xs mt-1">{errors.expectedSalary}</p>}
+                          {errors.expectedSalary && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.expectedSalary}
+                            </p>
+                          )}
                         </div>
-                        
                       </div>
 
                       {/* File Upload */}
@@ -541,7 +693,7 @@ const handleInputChange = (e) => {
                           className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
                         />
                       </div>
-                      
+
                       {/* Reference (Optional) */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
@@ -589,7 +741,7 @@ const handleInputChange = (e) => {
                 </p>
                 <input
                   type="text"
-                  value="https://azgard9.com/careers/32"
+                  value={`https://azgard-job.vercel.app/${location.pathname}`}
                   readOnly
                   className="w-full border border-gray-300 rounded-full px-3 py-2 text-sm text-gray-700"
                 />
@@ -610,18 +762,18 @@ const handleInputChange = (e) => {
               <div>
                 <h1 className="text-gray-500 text-sm">Location</h1>
                 <p className="text-gray-700 text-md font-semibold">
-                  Lahore (Remote)
+                  {jobDetail[0]?.LOCATION} ({jobDetail[0]?.JOB_TYPE})
                 </p>
                 <hr className="my-2 border-gray-300" />
               </div>
               <div>
                 <h1 className="text-gray-500 text-sm">Employment Type</h1>
-                <p className="text-gray-700 text-md font-semibold">Full-Time</p>
+                <p className="text-gray-700 text-md font-semibold">{jobDetail[0]?.WORK_SCHEDULE}</p>
                 <hr className="my-2 border-gray-300" />
               </div>
               <div>
                 <h1 className="text-gray-500 text-sm">Minimum Experience</h1>
-                <p className="text-gray-700 text-md font-semibold">Mid-level</p>
+                <p className="text-gray-700 text-md font-semibold">{jobDetail[0]?.SENIORITY}</p>
                 <hr className="my-2 border-gray-300" />
               </div>
             </div>
@@ -638,7 +790,7 @@ const handleInputChange = (e) => {
               <MdOutlineCheckCircleOutline size={22} />
               Submit Application
             </button>
-            <button 
+            <button
               className="text-white underline text-lg font-semibold"
               onClick={() => setShowForm(false)}
             >
