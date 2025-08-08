@@ -32,13 +32,13 @@ const JobList = () => {
           {/* <div className="bg-black text-white px-3 py-2 rounded">DigiU</div> */}
         </div>
         <div className="flex space-x-3">
-          <button className="py-3 px-4 border rounded-full border-[#48413f]">
+          <button className="py-3 px-4 border rounded-full border-gray-400 hover:border-black transition-all ease-in-out duration-300">
             <FaLinkedinIn />
           </button>
-          <button className="py-3 px-4 border rounded-full border-[#48413f]">
+          <button className="py-3 px-4 border rounded-full border-gray-400 hover:border-black transition-all ease-in-out duration-300">
             <FaTwitter />
           </button>
-          <button className="py-3 px-4 border rounded-full border-[#48413f]">
+          <button className="py-3 px-4 border rounded-full border-gray-400 hover:border-black transition-all ease-in-out duration-300">
             <FaFacebookF />
           </button>
         </div>

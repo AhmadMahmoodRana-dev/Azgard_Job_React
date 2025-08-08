@@ -9,12 +9,8 @@ import axios from "axios";
 
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState({
-    value: "pakistan",
-    label: "Pakistan",
-  });
-
-  // Form state
+  const [countryOptions, setCountryOptions] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -22,7 +18,8 @@ const JobDetail = () => {
     email: "",
     phone: "",
     address: "",
-    city: "",
+    city: "", 
+    country: "",
     province: "",
     postalCode: "",
     highestEducation: "",
@@ -38,17 +35,30 @@ const JobDetail = () => {
   const [availableFrom, setAvailableFrom] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const countryOptions = [
-    { value: "nicaragua", label: "Nicaragua" },
-    { value: "niger", label: "Niger" },
-    { value: "nigeria", label: "Nigeria" },
-    { value: "niue", label: "Niue" },
-    { value: "norfolk-island", label: "Norfolk Island" },
-    { value: "northern-mariana-islands", label: "Northern Mariana Islands" },
-    { value: "norway", label: "Norway" },
-    { value: "oman", label: "Oman" },
-    { value: "pakistan", label: "Pakistan" },
-  ];
+  const fetchCountryOptions = async () => {
+    try {
+      const { data } = await axios.get(
+        `https://countriesnow.space/api/v0.1/countries/flag/images`
+      );
+      const formattedOptions = data.data.map((country) => ({
+        value: country.iso2, // or country.iso3 if you prefer
+        label: (
+          <div className="flex items-center gap-2">
+            <img src={country.flag} alt={country.name} className="w-5 h-5" />
+            {country.name}
+          </div>
+        ),
+      }));
+
+      setCountryOptions(formattedOptions);
+    } catch (error) {
+      console.error("Error fetching country options:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCountryOptions();
+  }, []);
 
   const formatCnic = (value) => {
     const cleaned = value.replace(/\D/g, "");
@@ -145,6 +155,7 @@ const JobDetail = () => {
       console.log("Form submitted:", { ...formData });
       console.log("Form submitted resumeFile:", { resumeFile });
       console.log("Form submitted availableFrom :", { availableFrom });
+      console.log("selectedCountry :", selectedCountry);
       setSubmitted(true);
 
       setTimeout(() => {
@@ -203,7 +214,7 @@ const JobDetail = () => {
 
   const { id } = useParams();
   const [jobDetail, setJobDetail] = useState([]);
-  const location =useLocation();
+  const location = useLocation();
 
   const fetchJobDetail = async () => {
     try {
@@ -244,7 +255,9 @@ const JobDetail = () => {
             <h2 className="text-2xl font-bold tracking-wide font-serif text-[#2e7918] mb-2">
               {jobDetail[0]?.TITLE}
             </h2>
-            <p className="text-[#48413f] mb-6">{jobDetail[0]?.LOCATION} ({jobDetail[0]?.JOB_TYPE})</p>
+            <p className="text-[#48413f] mb-6">
+              {jobDetail[0]?.LOCATION} ({jobDetail[0]?.JOB_TYPE})
+            </p>
             <hr className="mb-6" />
             <AnimatePresence mode="wait">
               {!showForm ? (
@@ -288,8 +301,7 @@ const JobDetail = () => {
                         professional demeanor at all times
                       </li>
                     </ul>
-                  </div> */
-                  }
+                  </div> */}
                   {jobDetail[0]?.JOB_DESCRIPTION}
 
                   {/* <div>
@@ -550,12 +562,13 @@ const JobDetail = () => {
                           Country*
                         </label>
                         <Select
-                          defaultValue={selectedCountry}
+                          value={selectedCountry}
                           onChange={setSelectedCountry}
                           options={countryOptions}
                           className="text-sm"
                           classNamePrefix="react-select"
                         />
+                        
                       </div>
 
                       {/* Education and Employment Details */}
@@ -768,12 +781,16 @@ const JobDetail = () => {
               </div>
               <div>
                 <h1 className="text-gray-500 text-sm">Employment Type</h1>
-                <p className="text-gray-700 text-md font-semibold">{jobDetail[0]?.WORK_SCHEDULE}</p>
+                <p className="text-gray-700 text-md font-semibold">
+                  {jobDetail[0]?.WORK_SCHEDULE}
+                </p>
                 <hr className="my-2 border-gray-300" />
               </div>
               <div>
                 <h1 className="text-gray-500 text-sm">Minimum Experience</h1>
-                <p className="text-gray-700 text-md font-semibold">{jobDetail[0]?.SENIORITY}</p>
+                <p className="text-gray-700 text-md font-semibold">
+                  {jobDetail[0]?.SENIORITY}
+                </p>
                 <hr className="my-2 border-gray-300" />
               </div>
             </div>
