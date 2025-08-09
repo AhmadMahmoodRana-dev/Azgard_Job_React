@@ -18,7 +18,7 @@ const JobDetail = () => {
     email: "",
     phone: "",
     address: "",
-    city: "", 
+    city: "",
     country: "",
     province: "",
     postalCode: "",
@@ -29,7 +29,6 @@ const JobDetail = () => {
     expectedSalary: "",
     reference: "",
   });
-
   const [errors, setErrors] = useState({});
   const [resumeFile, setResumeFile] = useState(null);
   const [availableFrom, setAvailableFrom] = useState("");
@@ -105,7 +104,6 @@ const JobDetail = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const cnicRegex = /^\d{5}-\d{7}-\d{1}$/;
-
     // Required fields validation
     const requiredFields = [
       "firstName",
@@ -123,65 +121,84 @@ const JobDetail = () => {
       "currentSalary",
       "expectedSalary",
     ];
-
     requiredFields.forEach((field) => {
       if (!formData[field].trim()) {
         newErrors[field] = "This field is required";
       }
     });
-
     // CNIC validation
     if (formData.cnic && !cnicRegex.test(formData.cnic)) {
       newErrors.cnic = "CNIC must be in format XXXXX-XXXXXXX-X";
     }
-
     // Email validation
     if (formData.email && !emailRegex.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
-
     // Phone validation - only requires '+' prefix
     if (formData.phone && !formData.phone.startsWith("+")) {
       newErrors.phone = "Phone must start with '+'";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Form submitted:", { ...formData });
-      console.log("Form submitted resumeFile:", { resumeFile });
-      console.log("Form submitted availableFrom :", { availableFrom });
-      console.log("selectedCountry :", selectedCountry);
-      setSubmitted(true);
+      const response = await axios.post(
+        `https://adt.azgard9.com:8443/ords/azhcm/Job_Detail_Form/Insert`,
+        {
+          P_FIRST_NAME: formData?.firstName,
+          P_LAST_NAME: formData?.lastName,
+          P_CNIC: formData?.cnic,
+          P_EMAIL: formData?.email,
+          P_PHONE: formData?.phone,
+          P_ADDRESS: formData?.address,
+          P_CITY: formData?.city,
+          P_PROVINCE: formData?.province,
+          P_POSTAL_CODE: formData?.postalCode,
+          P_CURRENT_EMPLOYER: formData?.currentEmployer,
+          P_CURRENT_DESIGNATION: formData?.currentDesignation,
+          P_CURRENT_SALARY: Number(formData?.currentSalary),
+          P_EXPECTED_SALARY: Number(formData?.expectedSalary),
+          P_HIGHEST_EDUCATION: formData?.highestEducation,
+          P_REFERENCE: formData?.reference,
+          P_AVAILABLE_FROM: availableFrom,
+          P_RESUME_NAME: resumeFile?.name,
+          P_RESUME_TYPE: resumeFile?.type,
+        }
+      );
+      console.log(response, "FORM RESPONSE");
 
-      setTimeout(() => {
-        setShowForm(false);
-        setFormData({
-          firstName: "",
-          lastName: "",
-          cnic: "",
-          email: "",
-          phone: "",
-          address: "",
-          city: "",
-          province: "",
-          postalCode: "",
-          highestEducation: "",
-          currentEmployer: "",
-          currentDesignation: "",
-          currentSalary: "",
-          expectedSalary: "",
-          reference: "",
-        });
-        setResumeFile(null);
-        setAvailableFrom("");
-        setErrors({});
-        setSubmitted(false);
-      }, 2000);
+      if (response.status == 200) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setShowForm(false);
+          setFormData({
+            firstName: "",
+            lastName: "",
+            cnic: "",
+            email: "",
+            phone: "",
+            address: "",
+            city: "",
+            province: "",
+            postalCode: "",
+            highestEducation: "",
+            currentEmployer: "",
+            currentDesignation: "",
+            currentSalary: "",
+            expectedSalary: "",
+            reference: "",
+          });
+          setResumeFile(null);
+          setAvailableFrom("");
+          setErrors({});
+          setSubmitted(false);
+        }, 2000);
+      } else {
+        alert("Error submitting form");
+      }
     }
   };
 
@@ -211,7 +228,6 @@ const JobDetail = () => {
   }, [showForm]);
 
   // FETCH JOB DETAIL
-
   const { id } = useParams();
   const [jobDetail, setJobDetail] = useState([]);
   const location = useLocation();
@@ -268,70 +284,7 @@ const JobDetail = () => {
                   exit={{ x: -500, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* <div className="mb-6">
-                    <h3 className="font-semibold text-gray-800 mb-2">
-                      What you'll be doing
-                    </h3>
-                    <ul className="list-disc list-inside space-y-2 text-[#48413f] text-sm pl-12">
-                      <li>
-                        Contact customers via phone, email and letter to
-                        identify them & collect outstanding payments.
-                      </li>
-                      <li>
-                        Trace individuals who have skipped on their financial
-                        obligations using various research techniques
-                      </li>
-                      <li>
-                        Negotiate payment plans and settlements with customers
-                      </li>
-                      <li>
-                        Trace individuals/businesses and call them to confirm
-                        their current addresses and notify them about illegal
-                        use of energy
-                      </li>
-                      <li>
-                        Maintain accurate records and documentation of all
-                        customer interactions
-                      </li>
-                      <li>
-                        Escalate unresolved cases to the relevant stakeholders
-                      </li>
-                      <li>
-                        Provide excellent customer service and maintain a
-                        professional demeanor at all times
-                      </li>
-                    </ul>
-                  </div> */}
                   {jobDetail[0]?.JOB_DESCRIPTION}
-
-                  {/* <div>
-                    <h3 className="font-semibold text-gray-800 mb-2">
-                      What we're looking for
-                    </h3>
-                    <ul className="list-disc list-inside space-y-2 text-[#48413f] text-sm pl-12">
-                      <li>
-                        Proven experience in a collections or skip tracing role,
-                        preferably in the call center or customer service
-                        industry
-                      </li>
-                      <li>Energy industry experience is a bonus</li>
-                      <li>Strong negotiation and conflict resolution skills</li>
-                      <li>
-                        Excellent communication and interpersonal abilities
-                      </li>
-                      <li>
-                        Attention to detail and the ability to accurately
-                        maintain records
-                      </li>
-                      <li>
-                        Familiarity with debt collection legislation and
-                        regulations
-                      </li>
-                      <li>
-                        Proficient in using various research tools and databases
-                      </li>
-                    </ul>
-                  </div> */}
                 </motion.div>
               ) : (
                 <motion.div
@@ -568,7 +521,6 @@ const JobDetail = () => {
                           className="text-sm"
                           classNamePrefix="react-select"
                         />
-                        
                       </div>
 
                       {/* Education and Employment Details */}
