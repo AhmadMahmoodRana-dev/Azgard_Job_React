@@ -310,7 +310,7 @@ const JobDetail = () => {
                   transition={{ duration: 0.2 }}
                 >
                 <div
-                className="text-gray-700 text-sm leading-relaxed"
+                className="text-gray-700 text-sm leading-relaxed description-content"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(jobDetail[0]?.JOB_DESCRIPTION),
                 }}
