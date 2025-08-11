@@ -6,6 +6,8 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { MdOutlineCheckCircleOutline } from "react-icons/md";
 import Select from "react-select";
 import axios from "axios";
+import DOMPurify from "dompurify";
+
 
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
@@ -307,7 +309,12 @@ const JobDetail = () => {
                   exit={{ x: -500, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {jobDetail[0]?.JOB_DESCRIPTION}
+                <div
+                className="text-gray-700 text-sm leading-relaxed"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(jobDetail[0]?.JOB_DESCRIPTION),
+                }}
+              />
                 </motion.div>
               ) : (
                 <motion.div
