@@ -166,8 +166,30 @@ const JobDetail = () => {
           P_AVAILABLE_FROM: availableFrom,
           P_RESUME_NAME: resumeFile?.name,
           P_RESUME_TYPE: resumeFile?.type,
+          P_COUNTRY: selectedCountry?.value,
         }
       );
+      console.log({
+        P_FIRST_NAME: formData?.firstName,
+        P_LAST_NAME: formData?.lastName,
+        P_CNIC: formData?.cnic,
+        P_EMAIL: formData?.email,
+        P_PHONE: formData?.phone,
+        P_ADDRESS: formData?.address,
+        P_CITY: formData?.city,
+        P_PROVINCE: formData?.province,
+        P_POSTAL_CODE: formData?.postalCode,
+        P_CURRENT_EMPLOYER: formData?.currentEmployer,
+        P_CURRENT_DESIGNATION: formData?.currentDesignation,
+        P_CURRENT_SALARY: Number(formData?.currentSalary),
+        P_EXPECTED_SALARY: Number(formData?.expectedSalary),
+        P_HIGHEST_EDUCATION: formData?.highestEducation,
+        P_REFERENCE: formData?.reference,
+        P_AVAILABLE_FROM: availableFrom,
+        P_RESUME_NAME: resumeFile?.name,
+        P_RESUME_TYPE: resumeFile?.type,
+        P_COUNTRY: selectedCountry?.value,
+      });
       console.log(response, "FORM RESPONSE");
 
       if (response.status == 200) {
@@ -190,6 +212,7 @@ const JobDetail = () => {
             currentSalary: "",
             expectedSalary: "",
             reference: "",
+            country: "",
           });
           setResumeFile(null);
           setAvailableFrom("");
