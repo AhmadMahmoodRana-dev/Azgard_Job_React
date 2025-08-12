@@ -42,7 +42,7 @@ const JobDetail = () => {
         `https://countriesnow.space/api/v0.1/countries/flag/images`
       );
       const formattedOptions = data.data.map((country) => ({
-        value: country.iso2, // or country.iso3 if you prefer
+        value: country.name, // or country.iso3 if you prefer
         label: (
           <div className="flex items-center gap-2">
             <img src={country.flag} alt={country.name} className="w-5 h-5" />
