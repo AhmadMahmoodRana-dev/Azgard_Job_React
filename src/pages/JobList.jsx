@@ -81,7 +81,7 @@ const JobList = () => {
               <div className="flex justify-start">
                 <div className="flex items-center gap-1 text-sm text-gray-600">
                   <MdOutlinePeople size={18} />
-                  <span>{job?.WORK_SCHEDULE}</span>
+                  <span>{job?.EMPLOYEMENT_TYPE}</span>
                 </div>
               </div>
             </div>

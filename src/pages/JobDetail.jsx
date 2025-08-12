@@ -8,7 +8,6 @@ import Select from "react-select";
 import axios from "axios";
 import DOMPurify from "dompurify";
 
-
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
   const [countryOptions, setCountryOptions] = useState([]);
@@ -35,6 +34,15 @@ const JobDetail = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [availableFrom, setAvailableFrom] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  // Add new state for reference options
+  const [hasReference, setHasReference] = useState(false);
+  const [referenceFields, setReferenceFields] = useState({
+    referenceName: "",
+    referenceDesignation: "",
+    referenceDepartment: "",
+  });
+  const [referenceErrors, setReferenceErrors] = useState({});
 
   const fetchCountryOptions = async () => {
     try {
@@ -115,8 +123,8 @@ const JobDetail = () => {
       "phone",
       "address",
       "city",
-      "province",
-      "postalCode",
+      // "province",
+      // "postalCode",
       "highestEducation",
       "currentEmployer",
       "currentDesignation",
@@ -140,12 +148,48 @@ const JobDetail = () => {
     if (formData.phone && !formData.phone.startsWith("+")) {
       newErrors.phone = "Phone must start with '+'";
     }
+    if (hasReference) {
+      if (!referenceFields.referenceName.trim()) {
+        newErrors.referenceName = "Reference name is required";
+      }
+      if (!referenceFields.referenceDesignation.trim()) {
+        newErrors.referenceDesignation = "Reference designation is required";
+      }
+      if (!referenceFields.referenceDepartment.trim()) {
+        newErrors.referenceDepartment = "Reference department is required";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handle reference radio change
+  const handleReferenceChange = (value) => {
+    setHasReference(value === "yes");
+    if (value === "no") {
+      // Clear reference fields when selecting "No"
+      setReferenceFields({
+        referenceName: "",
+        referenceDesignation: "",
+        referenceDepartment: "",
+      });
+      setReferenceErrors({});
+    }
+  };
+
+  // Handle reference input changes
+  const handleReferenceInputChange = (e) => {
+    const { name, value } = e.target;
+    setReferenceFields((prev) => ({ ...prev, [name]: value }));
+    if (referenceErrors[name]) {
+      setReferenceErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (validateForm()) {
       const response = await axios.post(
         `https://adt.azgard9.com:8443/ords/azhcm/Job_Detail_Form/Insert`,
@@ -164,35 +208,40 @@ const JobDetail = () => {
           P_CURRENT_SALARY: Number(formData?.currentSalary),
           P_EXPECTED_SALARY: Number(formData?.expectedSalary),
           P_HIGHEST_EDUCATION: formData?.highestEducation,
-          P_REFERENCE: formData?.reference,
+          P_REFERENCE: referenceFields?.referenceName,
           P_AVAILABLE_FROM: availableFrom,
           P_RESUME_NAME: resumeFile?.name,
           P_RESUME_TYPE: resumeFile?.type,
           P_COUNTRY: selectedCountry?.value,
+          "P_REF_DEPARTMENT": referenceFields?.referenceDepartment,
+          "P_REF_DESIGNATION": referenceFields?.referenceDesignation
+
         }
       );
       console.log({
-        P_FIRST_NAME: formData?.firstName,
-        P_LAST_NAME: formData?.lastName,
-        P_CNIC: formData?.cnic,
-        P_EMAIL: formData?.email,
-        P_PHONE: formData?.phone,
-        P_ADDRESS: formData?.address,
-        P_CITY: formData?.city,
-        P_PROVINCE: formData?.province,
-        P_POSTAL_CODE: formData?.postalCode,
-        P_CURRENT_EMPLOYER: formData?.currentEmployer,
-        P_CURRENT_DESIGNATION: formData?.currentDesignation,
-        P_CURRENT_SALARY: Number(formData?.currentSalary),
-        P_EXPECTED_SALARY: Number(formData?.expectedSalary),
-        P_HIGHEST_EDUCATION: formData?.highestEducation,
-        P_REFERENCE: formData?.reference,
-        P_AVAILABLE_FROM: availableFrom,
-        P_RESUME_NAME: resumeFile?.name,
-        P_RESUME_TYPE: resumeFile?.type,
-        P_COUNTRY: selectedCountry?.value,
-      });
-      console.log(response, "FORM RESPONSE");
+          P_FIRST_NAME: formData?.firstName,
+          P_LAST_NAME: formData?.lastName,
+          P_CNIC: formData?.cnic,
+          P_EMAIL: formData?.email,
+          P_PHONE: formData?.phone,
+          P_ADDRESS: formData?.address,
+          P_CITY: formData?.city,
+          P_PROVINCE: formData?.province,
+          P_POSTAL_CODE: formData?.postalCode,
+          P_CURRENT_EMPLOYER: formData?.currentEmployer,
+          P_CURRENT_DESIGNATION: formData?.currentDesignation,
+          P_CURRENT_SALARY: Number(formData?.currentSalary),
+          P_EXPECTED_SALARY: Number(formData?.expectedSalary),
+          P_HIGHEST_EDUCATION: formData?.highestEducation,
+          P_REFERENCE: referenceFields?.referenceName,
+          P_AVAILABLE_FROM: availableFrom,
+          P_RESUME_NAME: resumeFile?.name,
+          P_RESUME_TYPE: resumeFile?.type,
+          P_COUNTRY: selectedCountry?.value,
+          "P_REF_DEPARTMENT": referenceFields?.referenceDepartment,
+          "P_REF_DESIGNATION": referenceFields?.referenceDesignation
+
+        })
 
       if (response.status == 200) {
         setSubmitted(true);
@@ -217,6 +266,8 @@ const JobDetail = () => {
             country: "",
           });
           setResumeFile(null);
+          setReferenceFields("")
+
           setAvailableFrom("");
           setErrors({});
           setSubmitted(false);
@@ -246,6 +297,7 @@ const JobDetail = () => {
         expectedSalary: "",
         reference: "",
       });
+      setReferenceFields("")
       setResumeFile(null);
       setAvailableFrom("");
       setErrors({});
@@ -309,12 +361,12 @@ const JobDetail = () => {
                   exit={{ x: -500, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                <div
-                className="text-gray-700 text-sm leading-relaxed description-content"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(jobDetail[0]?.JOB_DESCRIPTION),
-                }}
-              />
+                  <div
+                    className="text-gray-700 text-sm leading-relaxed description-content"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(jobDetail[0]?.JOB_DESCRIPTION),
+                    }}
+                  />
                 </motion.div>
               ) : (
                 <motion.div
@@ -692,15 +744,101 @@ const JobDetail = () => {
                       {/* Reference (Optional) */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
-                          Any Reference in Azgard 9
+                          Any Reference in Azgard 9?*
                         </label>
-                        <input
-                          type="text"
-                          name="reference"
-                          value={formData.reference}
-                          onChange={handleInputChange}
-                          className="border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]"
-                        />
+                        <div className="flex gap-4 mb-3">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="hasReference"
+                              value="yes"
+                              checked={hasReference}
+                              onChange={() => handleReferenceChange("yes")}
+                              className="mr-2"
+                            />
+                            Yes
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="hasReference"
+                              value="no"
+                              checked={!hasReference}
+                              onChange={() => handleReferenceChange("no")}
+                              className="mr-2"
+                            />
+                            No
+                          </label>
+                        </div>
+
+                        {/* Conditionally show reference fields */}
+                        {hasReference && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                Reference Name*
+                              </label>
+                              <input
+                                type="text"
+                                name="referenceName"
+                                value={referenceFields.referenceName}
+                                onChange={handleReferenceInputChange}
+                                className={`border ${
+                                  errors.referenceName
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                              />
+                              {errors.referenceName && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {errors.referenceName}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                Reference Designation*
+                              </label>
+                              <input
+                                type="text"
+                                name="referenceDesignation"
+                                value={referenceFields.referenceDesignation}
+                                onChange={handleReferenceInputChange}
+                                className={`border ${
+                                  errors.referenceDesignation
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                              />
+                              {errors.referenceDesignation && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {errors.referenceDesignation}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">
+                                Reference Department*
+                              </label>
+                              <input
+                                type="text"
+                                name="referenceDepartment"
+                                value={referenceFields.referenceDepartment}
+                                onChange={handleReferenceInputChange}
+                                className={`border ${
+                                  errors.referenceDepartment
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                              />
+                              {errors.referenceDepartment && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {errors.referenceDepartment}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </form>
                   )}
@@ -764,7 +902,7 @@ const JobDetail = () => {
               <div>
                 <h1 className="text-gray-500 text-sm">Employment Type</h1>
                 <p className="text-gray-700 text-md font-semibold">
-                  {jobDetail[0]?.WORK_SCHEDULE}
+                  {jobDetail[0]?.EMPLOYEMENT_TYPE}
                 </p>
                 <hr className="my-2 border-gray-300" />
               </div>
