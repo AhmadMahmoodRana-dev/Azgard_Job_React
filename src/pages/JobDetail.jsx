@@ -242,6 +242,7 @@ const JobDetail = () => {
           "P_REF_DESIGNATION": referenceFields?.referenceDesignation
 
         })
+        console.log("Form Submit Successfully !")
 
       if (response.status == 200) {
         setSubmitted(true);
