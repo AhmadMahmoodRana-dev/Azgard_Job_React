@@ -7,6 +7,7 @@ import { MdOutlineCheckCircleOutline } from "react-icons/md";
 import Select from "react-select";
 import axios from "axios";
 import DOMPurify from "dompurify";
+import FormatDate from "../services/FormatDate";
 
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
@@ -33,9 +34,8 @@ const JobDetail = () => {
   const [errors, setErrors] = useState({});
   const [resumeFile, setResumeFile] = useState(null);
   const [availableFrom, setAvailableFrom] = useState("");
+  console.log("availableFrom",availableFrom)
   const [submitted, setSubmitted] = useState(false);
-
-  // Add new state for reference options
   const [hasReference, setHasReference] = useState(false);
   const [referenceFields, setReferenceFields] = useState({
     referenceName: "",
@@ -43,6 +43,7 @@ const JobDetail = () => {
     referenceDepartment: "",
   });
   const [referenceErrors, setReferenceErrors] = useState({});
+  const { id } = useParams();
 
   const fetchCountryOptions = async () => {
     try {
@@ -123,8 +124,6 @@ const JobDetail = () => {
       "phone",
       "address",
       "city",
-      // "province",
-      // "postalCode",
       "highestEducation",
       "currentEmployer",
       "currentDesignation",
@@ -189,7 +188,7 @@ const JobDetail = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       const response = await axios.post(
         `https://adt.azgard9.com:8443/ords/azhcm/Job_Detail_Form/Insert`,
@@ -206,46 +205,46 @@ const JobDetail = () => {
           P_CURRENT_EMPLOYER: formData?.currentEmployer,
           P_CURRENT_DESIGNATION: formData?.currentDesignation,
           P_CURRENT_SALARY: formData?.currentSalary,
-          P_EXPECTED_SALARY:formData?.expectedSalary,
-          P_HIGHEST_EDUCATION: formData?.highestEducation,
-          P_REFERENCE: referenceFields?.referenceName,
-          P_AVAILABLE_FROM: availableFrom,
-          P_RESUME_NAME: resumeFile?.name,
-          P_RESUME_TYPE: resumeFile?.type,
-          P_COUNTRY: selectedCountry?.value,
-          "P_REF_DEPARTMENT": referenceFields?.referenceDepartment,
-          "P_REF_DESIGNATION": referenceFields?.referenceDesignation
-
-        }
-      );
-      console.log({
-          P_FIRST_NAME: formData?.firstName,
-          P_LAST_NAME: formData?.lastName,
-          P_CNIC: formData?.cnic,
-          P_EMAIL: formData?.email,
-          P_PHONE: formData?.phone,
-          P_ADDRESS: formData?.address,
-          P_CITY: formData?.city,
-          P_PROVINCE: formData?.province,
-          P_POSTAL_CODE: formData?.postalCode,
-          P_CURRENT_EMPLOYER: formData?.currentEmployer,
-          P_CURRENT_DESIGNATION: formData?.currentDesignation,
-          P_CURRENT_SALARY: formData?.currentSalary,
           P_EXPECTED_SALARY: formData?.expectedSalary,
           P_HIGHEST_EDUCATION: formData?.highestEducation,
           P_REFERENCE: referenceFields?.referenceName,
-          P_AVAILABLE_FROM: availableFrom,
+          P_AVAILABLE_FROM: FormatDate(availableFrom),
           P_RESUME_NAME: resumeFile?.name,
           P_RESUME_TYPE: resumeFile?.type,
           P_COUNTRY: selectedCountry?.value,
-          "P_REF_DEPARTMENT": referenceFields?.referenceDepartment,
-          "P_REF_DESIGNATION": referenceFields?.referenceDesignation
-
-        })
-        console.log("Form Submit Successfully !")
+          P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
+          P_REF_DESIGNATION: referenceFields?.referenceDesignation,
+          P_JOB_ID: id,
+        }
+      );
+      console.log({
+        P_FIRST_NAME: formData?.firstName,
+        P_LAST_NAME: formData?.lastName,
+        P_CNIC: formData?.cnic,
+        P_EMAIL: formData?.email,
+        P_PHONE: formData?.phone,
+        P_ADDRESS: formData?.address,
+        P_CITY: formData?.city,
+        P_PROVINCE: formData?.province,
+        P_POSTAL_CODE: formData?.postalCode,
+        P_CURRENT_EMPLOYER: formData?.currentEmployer,
+        P_CURRENT_DESIGNATION: formData?.currentDesignation,
+        P_CURRENT_SALARY: formData?.currentSalary,
+        P_EXPECTED_SALARY: formData?.expectedSalary,
+        P_HIGHEST_EDUCATION: formData?.highestEducation,
+        P_REFERENCE: referenceFields?.referenceName,
+        P_AVAILABLE_FROM: availableFrom,
+        P_RESUME_NAME: resumeFile?.name,
+        P_RESUME_TYPE: resumeFile?.type,
+        P_COUNTRY: selectedCountry?.value,
+        P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
+        P_REF_DESIGNATION: referenceFields?.referenceDesignation,
+        P_JOB_ID: id,
+      });
+      console.log("Form Submit Successfully !");
 
       if (response.status == 200) {
-        setSubmitted(true);
+        setSubmitted(true); 
         setTimeout(() => {
           setShowForm(false);
           setFormData({
@@ -267,7 +266,7 @@ const JobDetail = () => {
             country: "",
           });
           setResumeFile(null);
-          setReferenceFields("")
+          setReferenceFields("");
 
           setAvailableFrom("");
           setErrors({});
@@ -298,7 +297,7 @@ const JobDetail = () => {
         expectedSalary: "",
         reference: "",
       });
-      setReferenceFields("")
+      setReferenceFields("");
       setResumeFile(null);
       setAvailableFrom("");
       setErrors({});
@@ -306,7 +305,6 @@ const JobDetail = () => {
   }, [showForm]);
 
   // FETCH JOB DETAIL
-  const { id } = useParams();
   const [jobDetail, setJobDetail] = useState([]);
   const location = useLocation();
 
