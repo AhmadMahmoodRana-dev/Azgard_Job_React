@@ -146,6 +146,16 @@ const JobDetail = () => {
       }
     });
 
+    // Notice Period (availableFrom) validation - ADD THIS
+    if (!availableFrom.trim()) {
+      newErrors.availableFrom = "Notice period is required";
+    }
+
+    // Resume file validation - ADD THIS
+    if (!resumeFile) {
+      newErrors.resumeFile = "Resume is required";
+    }
+  
     // CNIC validation
     if (formData.cnic && !cnicRegex.test(formData.cnic)) {
       newErrors.cnic = "CNIC must be in format XXXXX-XXXXXXX-X";
@@ -219,7 +229,7 @@ const JobDetail = () => {
           P_BIRTH_DATE: FormatDate(formData?.dob),
           P_GENDER: formData?.gender,
           P_MARITAL_STATUS: formData?.maritalStatus,
-          P_EXPERIENCE: formData?.experience,
+          P_EXPERIENCE: `${formData?.experience}Year`,
           P_CNIC: formData?.cnic,
           P_EMAIL: formData?.email,
           P_PHONE: formData?.phone,
@@ -243,7 +253,6 @@ const JobDetail = () => {
         }
       );
 
-
       if (response.status == 200) {
         setSubmitted(true);
         setTimeout(() => {
@@ -254,7 +263,7 @@ const JobDetail = () => {
             dob: "",
             gender: "",
             maritalStatus: "",
-                    experience:"",
+            experience: "",
 
             cnic: "",
             email: "",
@@ -296,7 +305,7 @@ const JobDetail = () => {
         dob: "",
         gender: "",
         maritalStatus: "",
-        experience:"",
+        experience: "",
         cnic: "",
         email: "",
         phone: "",
@@ -595,25 +604,27 @@ const JobDetail = () => {
                             </p>
                           )}
                         </div>
-                         <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Experience*
-                        </label>
-                        <input
-                          type="number"
-                          name="experience"
-                          value={formData.experience}
-                          onChange={handleInputChange}
-                          className={`border ${
-                            errors.experience ? "border-red-500" : "border-gray-300"
-                          } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
-                        />
-                        {errors.experience && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.experience}
-                          </p>
-                        )}
-                      </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Experience*
+                          </label>
+                          <input
+                            type="number"
+                            name="experience"
+                            value={formData.experience}
+                            onChange={handleInputChange}
+                            className={`border ${
+                              errors.experience
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
+                          />
+                          {errors.experience && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.experience}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Address */}
@@ -716,6 +727,7 @@ const JobDetail = () => {
                           className="text-sm"
                           classNamePrefix="react-select"
                         />
+                        
                       </div>
 
                       {/* Education and Employment Details */}
@@ -838,6 +850,11 @@ const JobDetail = () => {
                           required
                           className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
                         />
+                        {errors.resumeFile && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.resumeFile}
+                          </p>
+                        )}
                       </div>
 
                       {/* Date */}
@@ -852,6 +869,11 @@ const JobDetail = () => {
                           required
                           className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
                         />
+                        {errors.availableFrom && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.availableFrom}
+                          </p>
+                        )}
                       </div>
 
                       {/* Reference (Optional) */}
