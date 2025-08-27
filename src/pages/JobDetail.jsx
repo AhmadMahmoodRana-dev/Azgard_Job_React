@@ -16,6 +16,10 @@ const JobDetail = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    dob: "",
+    gender: "",
+    maritalStatus: "",
+    experience: "",
     cnic: "",
     email: "",
     phone: "",
@@ -34,7 +38,6 @@ const JobDetail = () => {
   const [errors, setErrors] = useState({});
   const [resumeFile, setResumeFile] = useState(null);
   const [availableFrom, setAvailableFrom] = useState("");
-  console.log("availableFrom",availableFrom)
   const [submitted, setSubmitted] = useState(false);
   const [hasReference, setHasReference] = useState(false);
   const [referenceFields, setReferenceFields] = useState({
@@ -80,6 +83,7 @@ const JobDetail = () => {
       13
     )}`;
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -115,10 +119,15 @@ const JobDetail = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const cnicRegex = /^\d{5}-\d{7}-\d{1}$/;
+
     // Required fields validation
     const requiredFields = [
       "firstName",
       "lastName",
+      "dob",
+      "gender",
+      "maritalStatus",
+      "experience",
       "cnic",
       "email",
       "phone",
@@ -130,23 +139,29 @@ const JobDetail = () => {
       "currentSalary",
       "expectedSalary",
     ];
+
     requiredFields.forEach((field) => {
       if (!formData[field].trim()) {
         newErrors[field] = "This field is required";
       }
     });
+
     // CNIC validation
     if (formData.cnic && !cnicRegex.test(formData.cnic)) {
       newErrors.cnic = "CNIC must be in format XXXXX-XXXXXXX-X";
     }
+
     // Email validation
     if (formData.email && !emailRegex.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
+
     // Phone validation - only requires '+' prefix
     if (formData.phone && !formData.phone.startsWith("+")) {
       newErrors.phone = "Phone must start with '+'";
     }
+
+    // Reference validation - Fixed the issue here
     if (hasReference) {
       if (!referenceFields.referenceName.trim()) {
         newErrors.referenceName = "Reference name is required";
@@ -160,6 +175,7 @@ const JobDetail = () => {
     }
 
     setErrors(newErrors);
+    setReferenceErrors(newErrors); // This was missing - now errors will show
     return Object.keys(newErrors).length === 0;
   };
 
@@ -174,6 +190,12 @@ const JobDetail = () => {
         referenceDepartment: "",
       });
       setReferenceErrors({});
+      // Clear reference errors from main errors object too
+      const newErrors = { ...errors };
+      delete newErrors.referenceName;
+      delete newErrors.referenceDesignation;
+      delete newErrors.referenceDepartment;
+      setErrors(newErrors);
     }
   };
 
@@ -181,20 +203,52 @@ const JobDetail = () => {
   const handleReferenceInputChange = (e) => {
     const { name, value } = e.target;
     setReferenceFields((prev) => ({ ...prev, [name]: value }));
-    if (referenceErrors[name]) {
-      setReferenceErrors((prev) => ({ ...prev, [name]: "" }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log({
+      P_FIRST_NAME: formData?.firstName,
+      P_LAST_NAME: formData?.lastName,
+      P_BIRTH_DATE: FormatDate(formData?.dob),
+      P_GENDER: formData?.gender,
+      P_MARITAL_STATUS: formData?.maritalStatus,
+      P_EXPERIENCE: formData?.experience,
+      P_CNIC: formData?.cnic,
+      P_EMAIL: formData?.email,
+      P_PHONE: formData?.phone,
+      P_ADDRESS: formData?.address,
+      P_CITY: formData?.city,
+      P_PROVINCE: formData?.province,
+      P_POSTAL_CODE: formData?.postalCode,
+      P_CURRENT_EMPLOYER: formData?.currentEmployer,
+      P_CURRENT_DESIGNATION: formData?.currentDesignation,
+      P_CURRENT_SALARY: formData?.currentSalary,
+      P_EXPECTED_SALARY: formData?.expectedSalary,
+      P_HIGHEST_EDUCATION: formData?.highestEducation,
+      P_REFERENCE: referenceFields?.referenceName,
+      P_AVAILABLE_FROM: FormatDate(availableFrom),
+      P_RESUME_NAME: resumeFile?.name,
+      P_RESUME_TYPE: resumeFile?.type,
+      P_COUNTRY: selectedCountry?.value,
+      P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
+      P_REF_DESIGNATION: referenceFields?.referenceDesignation,
+      P_JOB_ID: id,
+    });
     if (validateForm()) {
       const response = await axios.post(
         `https://adt.azgard9.com:8443/ords/azhcm/Job_Detail_Form/Insert`,
         {
           P_FIRST_NAME: formData?.firstName,
           P_LAST_NAME: formData?.lastName,
+          P_BIRTH_DATE: FormatDate(formData?.dob),
+          P_GENDER: formData?.gender,
+          P_MARITAL_STATUS: formData?.maritalStatus,
+          P_EXPERIENCE: formData?.experience,
           P_CNIC: formData?.cnic,
           P_EMAIL: formData?.email,
           P_PHONE: formData?.phone,
@@ -217,39 +271,18 @@ const JobDetail = () => {
           P_JOB_ID: id,
         }
       );
-      console.log({
-        P_FIRST_NAME: formData?.firstName,
-        P_LAST_NAME: formData?.lastName,
-        P_CNIC: formData?.cnic,
-        P_EMAIL: formData?.email,
-        P_PHONE: formData?.phone,
-        P_ADDRESS: formData?.address,
-        P_CITY: formData?.city,
-        P_PROVINCE: formData?.province,
-        P_POSTAL_CODE: formData?.postalCode,
-        P_CURRENT_EMPLOYER: formData?.currentEmployer,
-        P_CURRENT_DESIGNATION: formData?.currentDesignation,
-        P_CURRENT_SALARY: formData?.currentSalary,
-        P_EXPECTED_SALARY: formData?.expectedSalary,
-        P_HIGHEST_EDUCATION: formData?.highestEducation,
-        P_REFERENCE: referenceFields?.referenceName,
-        P_AVAILABLE_FROM: availableFrom,
-        P_RESUME_NAME: resumeFile?.name,
-        P_RESUME_TYPE: resumeFile?.type,
-        P_COUNTRY: selectedCountry?.value,
-        P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
-        P_REF_DESIGNATION: referenceFields?.referenceDesignation,
-        P_JOB_ID: id,
-      });
-      console.log("Form Submit Successfully !");
+
 
       if (response.status == 200) {
-        setSubmitted(true); 
+        setSubmitted(true);
         setTimeout(() => {
           setShowForm(false);
           setFormData({
             firstName: "",
             lastName: "",
+            dob: "",
+            gender: "",
+            maritalStatus: "",
             cnic: "",
             email: "",
             phone: "",
@@ -266,10 +299,14 @@ const JobDetail = () => {
             country: "",
           });
           setResumeFile(null);
-          setReferenceFields("");
-
+          setReferenceFields({
+            referenceName: "",
+            referenceDesignation: "",
+            referenceDepartment: "",
+          });
           setAvailableFrom("");
           setErrors({});
+          setReferenceErrors({});
           setSubmitted(false);
         }, 2000);
       } else {
@@ -283,6 +320,9 @@ const JobDetail = () => {
       setFormData({
         firstName: "",
         lastName: "",
+        dob: "",
+        gender: "",
+        maritalStatus: "",
         cnic: "",
         email: "",
         phone: "",
@@ -297,10 +337,15 @@ const JobDetail = () => {
         expectedSalary: "",
         reference: "",
       });
-      setReferenceFields("");
+      setReferenceFields({
+        referenceName: "",
+        referenceDesignation: "",
+        referenceDepartment: "",
+      });
       setResumeFile(null);
       setAvailableFrom("");
       setErrors({});
+      setReferenceErrors({});
     }
   }, [showForm]);
 
@@ -438,25 +483,46 @@ const JobDetail = () => {
                       </div>
 
                       {/* Cnic */}
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          CNIC*
-                        </label>
-                        <input
-                          type="text"
-                          name="cnic"
-                          value={formData.cnic}
-                          onChange={handleInputChange}
-                          placeholder="35202-2394453-3"
-                          className={`border ${
-                            errors.cnic ? "border-red-500" : "border-gray-300"
-                          } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
-                        />
-                        {errors.cnic && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.cnic}
-                          </p>
-                        )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[70%]">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            CNIC*
+                          </label>
+                          <input
+                            type="text"
+                            name="cnic"
+                            value={formData.cnic}
+                            onChange={handleInputChange}
+                            placeholder="35202-2394453-3"
+                            className={`border ${
+                              errors.cnic ? "border-red-500" : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-full`}
+                          />
+                          {errors.cnic && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.cnic}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Date of Birth*
+                          </label>
+                          <input
+                            type="date"
+                            name="dob"
+                            value={formData.dob}
+                            onChange={handleInputChange}
+                            className={`border ${
+                              errors.dob ? "border-red-500" : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
+                          />
+                          {errors.dob && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.dob}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Email */}
@@ -500,6 +566,80 @@ const JobDetail = () => {
                             {errors.phone}
                           </p>
                         )}
+                      </div>
+                      {/* Gender + Marital Status */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-[80%]">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Gender*
+                          </label>
+                          <select
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleInputChange}
+                            className={`border ${
+                              errors.gender
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
+                          >
+                            <option value="">Select Gender</option>
+                            <option value="M">MALE</option>
+                            <option value="F">FEMALE</option>
+                            <option value="O">OTHER</option>
+                          </select>
+                          {errors.gender && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.gender}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Marital Status*
+                          </label>
+                          <select
+                            name="maritalStatus"
+                            value={formData.maritalStatus}
+                            onChange={handleInputChange}
+                            className={`border ${
+                              errors.maritalStatus
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
+                          >
+                            <option value="">Select Status</option>
+                            <option value="04">SEPARTED</option>
+                            <option value="01">MARRIED</option>
+                            <option value="02">SINGLE</option>
+                            <option value="03">DIVORCED</option>
+                            <option value="05">WIDOW</option>
+                          </select>
+                          {errors.maritalStatus && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.maritalStatus}
+                            </p>
+                          )}
+                        </div>
+                         <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Experience*
+                        </label>
+                        <input
+                          type="number"
+                          name="experience"
+                          value={formData.experience}
+                          onChange={handleInputChange}
+                          className={`border ${
+                            errors.experience ? "border-red-500" : "border-gray-300"
+                          } rounded-md outline-none text-gray-500 px-3 py-2 w-[45%]`}
+                        />
+                        {errors.experience && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.experience}
+                          </p>
+                        )}
+                      </div>
                       </div>
 
                       {/* Address */}
@@ -729,7 +869,7 @@ const JobDetail = () => {
                       {/* Date */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
-                          Available From*
+                          Notice Period*
                         </label>
                         <input
                           type="date"
