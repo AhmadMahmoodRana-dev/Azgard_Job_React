@@ -210,35 +210,6 @@ const JobDetail = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log({
-      P_FIRST_NAME: formData?.firstName,
-      P_LAST_NAME: formData?.lastName,
-      P_BIRTH_DATE: FormatDate(formData?.dob),
-      P_GENDER: formData?.gender,
-      P_MARITAL_STATUS: formData?.maritalStatus,
-      P_EXPERIENCE: formData?.experience,
-      P_CNIC: formData?.cnic,
-      P_EMAIL: formData?.email,
-      P_PHONE: formData?.phone,
-      P_ADDRESS: formData?.address,
-      P_CITY: formData?.city,
-      P_PROVINCE: formData?.province,
-      P_POSTAL_CODE: formData?.postalCode,
-      P_CURRENT_EMPLOYER: formData?.currentEmployer,
-      P_CURRENT_DESIGNATION: formData?.currentDesignation,
-      P_CURRENT_SALARY: formData?.currentSalary,
-      P_EXPECTED_SALARY: formData?.expectedSalary,
-      P_HIGHEST_EDUCATION: formData?.highestEducation,
-      P_REFERENCE: referenceFields?.referenceName,
-      P_AVAILABLE_FROM: FormatDate(availableFrom),
-      P_RESUME_NAME: resumeFile?.name,
-      P_RESUME_TYPE: resumeFile?.type,
-      P_COUNTRY: selectedCountry?.value,
-      P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
-      P_REF_DESIGNATION: referenceFields?.referenceDesignation,
-      P_JOB_ID: id,
-    });
     if (validateForm()) {
       const response = await axios.post(
         `https://adt.azgard9.com:8443/ords/azhcm/Job_Detail_Form/Insert`,
@@ -283,6 +254,8 @@ const JobDetail = () => {
             dob: "",
             gender: "",
             maritalStatus: "",
+                    experience:"",
+
             cnic: "",
             email: "",
             phone: "",
@@ -323,6 +296,7 @@ const JobDetail = () => {
         dob: "",
         gender: "",
         maritalStatus: "",
+        experience:"",
         cnic: "",
         email: "",
         phone: "",
