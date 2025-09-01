@@ -7,7 +7,7 @@ function FormatDate(dateString) {
   const month = months[date.getMonth()];
   const year = date.getFullYear();
 
-  return `${day}-${month}-${year}`;
+  return `${day}-${month}-${year}`.toUpperCase();
 }
 
 export default FormatDate;
