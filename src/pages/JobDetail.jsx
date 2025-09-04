@@ -39,6 +39,7 @@ const JobDetail = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [availableFrom, setAvailableFrom] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // NEW: Prevent double submission
   const [hasReference, setHasReference] = useState(false);
   const [referenceFields, setReferenceFields] = useState({
     referenceName: "",
@@ -54,7 +55,7 @@ const JobDetail = () => {
         `https://countriesnow.space/api/v0.1/countries/flag/images`
       );
       const formattedOptions = data.data.map((country) => ({
-        value: country.name, // or country.iso3 if you prefer
+        value: country.name,
         label: (
           <div className="flex items-center gap-2">
             <img src={country.flag} alt={country.name} className="w-5 h-5" />
@@ -91,9 +92,7 @@ const JobDetail = () => {
       const formatted = formatCnic(value);
       setFormData((prev) => ({ ...prev, [name]: formatted }));
     } else if (name === "phone") {
-      // Allow only + and digits
       let phone = value.replace(/[^\d+]/g, "");
-      // Ensure only one "+" at the beginning
       if (phone.includes("+")) {
         phone = "+" + phone.replace(/\+/g, "").slice(0, 15);
       }
@@ -111,8 +110,51 @@ const JobDetail = () => {
     }
   };
 
+  // NEW: Enhanced file validation function
+  const validateFile = (file) => {
+    if (!file) return "Resume is required";
+    
+    // Check file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      return "Only PDF, DOC, and DOCX files are allowed";
+    }
+    
+    // Check file size (5MB = 5 * 1024 * 1024 bytes)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return "File size must be less than 5MB";
+    }
+    
+    return null;
+  };
+
   const handleFileChange = (e) => {
-    setResumeFile(e.target.files[0]);
+    const file = e.target.files[0];
+    setResumeFile(file);
+    
+    // Clear previous file errors
+    if (errors.resumeFile) {
+      setErrors((prev) => ({ ...prev, resumeFile: "" }));
+    }
+    
+    // Validate file immediately
+    if (file) {
+      const fileError = validateFile(file);
+      if (fileError) {
+        setErrors((prev) => ({ ...prev, resumeFile: fileError }));
+        setResumeFile(null); // Clear invalid file
+        e.target.value = ''; // Clear input
+      }
+    }
   };
 
   const validateForm = () => {
@@ -146,14 +188,15 @@ const JobDetail = () => {
       }
     });
 
-    // Notice Period (availableFrom) validation - ADD THIS
+    // Notice Period validation
     if (!availableFrom.trim()) {
       newErrors.availableFrom = "Notice period is required";
     }
 
-    // Resume file validation - ADD THIS
-    if (!resumeFile) {
-      newErrors.resumeFile = "Resume is required";
+    // Enhanced resume file validation
+    const fileError = validateFile(resumeFile);
+    if (fileError) {
+      newErrors.resumeFile = fileError;
     }
 
     // CNIC validation
@@ -166,12 +209,12 @@ const JobDetail = () => {
       newErrors.email = "Invalid email format";
     }
 
-    // Phone validation - only requires '+' prefix
+    // Phone validation
     if (formData.phone && !formData.phone.startsWith("+")) {
       newErrors.phone = "Phone must start with '+'";
     }
 
-    // Reference validation - Fixed the issue here
+    // Reference validation
     if (hasReference) {
       if (!referenceFields.referenceName.trim()) {
         newErrors.referenceName = "Reference name is required";
@@ -185,7 +228,7 @@ const JobDetail = () => {
     }
 
     setErrors(newErrors);
-    setReferenceErrors(newErrors); // This was missing - now errors will show
+    setReferenceErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -193,14 +236,12 @@ const JobDetail = () => {
   const handleReferenceChange = (value) => {
     setHasReference(value === "yes");
     if (value === "no") {
-      // Clear reference fields when selecting "No"
       setReferenceFields({
         referenceName: "",
         referenceDesignation: "",
         referenceDepartment: "",
       });
       setReferenceErrors({});
-      // Clear reference errors from main errors object too
       const newErrors = { ...errors };
       delete newErrors.referenceName;
       delete newErrors.referenceDesignation;
@@ -218,81 +259,127 @@ const JobDetail = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validateForm()) {
+  // console.log(resumeFile, "resumeFile");
+
+  const sendAttachement = async (temp) => {
+    try {
+      const formData = new FormData();
+      formData.append('body', resumeFile);
+      formData.append('P_FILE_NAME', resumeFile?.name);
+      formData.append('P_MIME_TYPE', resumeFile?.type);
+      formData.append('P_TEMP_PK', temp);
+
       const response = await axios.post(
-        `https://adt.azgard9.com:8443/ords/azhcm/Job_Detail_Form/Insert`,
+        `https://adt.azgard9.com:8443/ords/azhcm/upload_files_Api/upload`,
+        formData,
         {
-          P_FIRST_NAME: formData?.firstName,
-          P_LAST_NAME: formData?.lastName,
-          P_BIRTH_DATE: FormatDate(formData?.dob),
-          P_GENDER: formData?.gender,
-          P_MARITAL_STATUS: formData?.maritalStatus,
-          P_EXPERIENCE: `${formData?.experience}Year`,
-          P_CNIC: formData?.cnic,
-          P_EMAIL: formData?.email,
-          P_PHONE: formData?.phone,
-          P_ADDRESS: formData?.address,
-          P_CITY: formData?.city,
-          P_PROVINCE: formData?.province,
-          P_POSTAL_CODE: formData?.postalCode,
-          P_CURRENT_EMPLOYER: formData?.currentEmployer,
-          P_CURRENT_DESIGNATION: formData?.currentDesignation,
-          P_CURRENT_SALARY: formData?.currentSalary,
-          P_EXPECTED_SALARY: formData?.expectedSalary,
-          P_HIGHEST_EDUCATION: formData?.highestEducation,
-          P_REFERENCE: referenceFields?.referenceName,
-          P_AVAILABLE_FROM: FormatDate(availableFrom),
-          P_RESUME_NAME: resumeFile?.name,
-          P_RESUME_TYPE: resumeFile?.type,
-          P_COUNTRY: selectedCountry?.value,
-          P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
-          P_REF_DESIGNATION: referenceFields?.referenceDesignation,
-          P_JOB_ID: id,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         }
       );
+      
+      // console.log("Attachment Response:", response);
+      return response;
+    } catch (error) {
+      console.error("Error uploading attachment:", error);
+      throw error;
+    }
+  };
 
-      if (response.status == 200) {
-        setSubmitted(true);
-        setTimeout(() => {
-          setShowForm(false);
-          setFormData({
-            firstName: "",
-            lastName: "",
-            dob: "",
-            gender: "",
-            maritalStatus: "",
-            experience: "",
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // NEW: Prevent double submission
+    if (isSubmitting) {
+      return;
+    }
+    
+    if (validateForm()) {
+      setIsSubmitting(true); // NEW: Set submitting state
+      
+      try {
+        const response = await axios.post(
+          `https://adt.azgard9.com:8443/ords/azhcm/Job_Detail_Form/Insert`,
+          {
+            P_FIRST_NAME: formData?.firstName,
+            P_LAST_NAME: formData?.lastName,
+            P_CNIC: formData?.cnic,
+            P_EMAIL: formData?.email,
+            P_PHONE: formData?.phone,
+            P_BIRTH_DATE: FormatDate(formData?.dob),
+            P_GENDER: formData?.gender,
+            P_MARITAL_STATUS: formData?.maritalStatus,
+            P_EXPERIENCE: `${formData?.experience}Year`,
+            P_ADDRESS: formData?.address,
+            P_CITY: formData?.city,
+            P_PROVINCE: formData?.province,
+            P_POSTAL_CODE: formData?.postalCode,
+            P_CURRENT_EMPLOYER: formData?.currentEmployer,
+            P_CURRENT_DESIGNATION: formData?.currentDesignation,
+            P_CURRENT_SALARY: formData?.currentSalary,
+            P_EXPECTED_SALARY: formData?.expectedSalary,
+            P_HIGHEST_EDUCATION: formData?.highestEducation,
+            P_REFERENCE: referenceFields?.referenceName,
+            P_AVAILABLE_FROM: FormatDate(availableFrom),
+            P_COUNTRY: selectedCountry?.value,
+            P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
+            P_REF_DESIGNATION: referenceFields?.referenceDesignation,
+            P_JOB_ID: id,
+          }
+        );
 
-            cnic: "",
-            email: "",
-            phone: "",
-            address: "",
-            city: "",
-            province: "",
-            postalCode: "",
-            highestEducation: "",
-            currentEmployer: "",
-            currentDesignation: "",
-            currentSalary: "",
-            expectedSalary: "",
-            reference: "",
-            country: "",
-          });
-          setResumeFile(null);
-          setReferenceFields({
-            referenceName: "",
-            referenceDesignation: "",
-            referenceDepartment: "",
-          });
-          setAvailableFrom("");
-          setErrors({});
-          setReferenceErrors({});
-          setSubmitted(false);
-        }, 2000);
-      } else {
-        alert("Error submitting form");
+        // console.log(response, "Response from backend");
+        
+        if (response.status === 200 && response.data?.P_TEMP_PK) {
+          await sendAttachement(response.data?.P_TEMP_PK);
+          setSubmitted(true);
+          
+          setTimeout(() => {
+            setShowForm(false);
+            // Reset all form data
+            setFormData({
+              firstName: "",
+              lastName: "",
+              dob: "",
+              gender: "",
+              maritalStatus: "",
+              experience: "",
+              cnic: "",
+              email: "",
+              phone: "",
+              address: "",
+              city: "",
+              province: "",
+              postalCode: "",
+              highestEducation: "",
+              currentEmployer: "",
+              currentDesignation: "",
+              currentSalary: "",
+              expectedSalary: "",
+              reference: "",
+              country: "",
+            });
+            setResumeFile(null);
+            setReferenceFields({
+              referenceName: "",
+              referenceDesignation: "",
+              referenceDepartment: "",
+            });
+            setAvailableFrom("");
+            setErrors({});
+            setReferenceErrors({});
+            setSubmitted(false);
+            setIsSubmitting(false); // NEW: Reset submitting state
+          }, 2000);
+        } else {
+          alert("Error submitting form - Invalid response");
+          setIsSubmitting(false); // NEW: Reset on error
+        }
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("Error submitting form. Please try again.");
+        setIsSubmitting(false); // NEW: Reset on error
       }
     }
   };
@@ -329,6 +416,7 @@ const JobDetail = () => {
       setAvailableFrom("");
       setErrors({});
       setReferenceErrors({});
+      setIsSubmitting(false); // NEW: Reset submitting state when form closes
     }
   }, [showForm]);
 
@@ -346,7 +434,7 @@ const JobDetail = () => {
           },
         }
       );
-      console.log("Job Detail Data:", data?.Job_Details);
+      // console.log("Job Detail Data:", data?.Job_Details);
       setJobDetail(data?.Job_Details);
     } catch (error) {
       console.error;
@@ -465,7 +553,7 @@ const JobDetail = () => {
                         </div>
                       </div>
 
-                      {/* Cnic */}
+                      {/* CNIC */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[70%]">
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -491,18 +579,19 @@ const JobDetail = () => {
                           <label className="block text-sm font-medium mb-1">
                             Date of Birth*
                           </label>
-                          {
-                            !formData.dob &&
-                          <input
-                            type="date"
-                            name="dob"
-                            value={formData.dob}
-                            onChange={handleInputChange}
-                            className={`border ${
-                              errors.dob ? "border-red-500" : "border-gray-300"
-                            } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
-                          />
-                          }
+                          {!formData.dob && (
+                            <input
+                              type="date"
+                              name="dob"
+                              value={formData.dob}
+                              onChange={handleInputChange}
+                              className={`border ${
+                                errors.dob
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
+                            />
+                          )}
                           {formData.dob && (
                             <p className="text-md text-gray-500 mt-1 rounded-md outline-none border border-gray-300 px-3 py-2 w-[100%]">
                               {FormatDate(formData.dob)}
@@ -558,7 +647,8 @@ const JobDetail = () => {
                           </p>
                         )}
                       </div>
-                      {/* Gender + Marital Status */}
+
+                      {/* Gender + Marital Status + Experience */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-[80%]">
                         <div>
                           <label className="block text-sm font-medium mb-1">
@@ -600,7 +690,7 @@ const JobDetail = () => {
                             } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
                           >
                             <option value="">Select Status</option>
-                            <option value="04">SEPARTED</option>
+                            <option value="04">SEPARATED</option>
                             <option value="01">MARRIED</option>
                             <option value="02">SINGLE</option>
                             <option value="03">DIVORCED</option>
@@ -847,17 +937,25 @@ const JobDetail = () => {
                         </div>
                       </div>
 
-                      {/* File Upload */}
+                      {/* File Upload - ENHANCED */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
-                          Upload Resume*
+                          Upload Resume* 
+                          <span className="text-xs text-gray-500 ml-2">
+                            (PDF, DOC, DOCX only - Max 5MB)
+                          </span>
                         </label>
                         <input
                           type="file"
                           onChange={handleFileChange}
-                          required
+                          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                           className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
                         />
+                        {resumeFile && (
+                          <div className="mt-2 text-sm text-green-600">
+                            Selected: {resumeFile.name} ({(resumeFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </div>
+                        )}
                         {errors.resumeFile && (
                           <p className="text-red-500 text-xs mt-1">
                             {errors.resumeFile}
@@ -865,25 +963,24 @@ const JobDetail = () => {
                         )}
                       </div>
 
-                      {/* Date */}
+                      {/* Notice Period */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
                           Notice Period*
                         </label>
-                        {!availableFrom &&
-                        <input
-                          type="date"
-                          value={availableFrom}
-                          onChange={(e) => setAvailableFrom(e.target.value)}
-                          required
-                          className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
-                        />
-                        }
+                        {!availableFrom && (
+                          <input
+                            type="date"
+                            value={availableFrom}
+                            onChange={(e) => setAvailableFrom(e.target.value)}
+                            className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
+                          />
+                        )}
                         {availableFrom && (
-                            <p className="text-md text-gray-500 mt-1 rounded-md outline-none border border-gray-300 px-3 py-2 w-[45%]">
-                              {FormatDate(availableFrom)}
-                            </p>
-                          )}
+                          <p className="text-md text-gray-500 mt-1 rounded-md outline-none border border-gray-300 px-3 py-2 w-[45%]">
+                            {FormatDate(availableFrom)}
+                          </p>
+                        )}
                         {errors.availableFrom && (
                           <p className="text-red-500 text-xs mt-1">
                             {errors.availableFrom}
@@ -1071,15 +1168,25 @@ const JobDetail = () => {
         <div className="fotter px-8 w-full h-[100px] bg-[#38312f] rounded-bl-2xl rounded-br-2xl flex items-center justify-between">
           <div className="flex gap-4">
             <button
-              className="flex bg-white px-6 py-3 rounded-full border hover:bg-[#f4fef1] cursor-pointer border-green-700 text-green-700 gap-2 font-medium text-lg justify-center items-center"
+              className={`flex px-6 py-3 rounded-full border gap-2 font-medium text-lg justify-center items-center ${
+                isSubmitting
+                  ? "bg-gray-400 cursor-not-allowed border-gray-400 text-gray-600"
+                  : "bg-white hover:bg-[#f4fef1] cursor-pointer border-green-700 text-green-700"
+              }`}
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
               <MdOutlineCheckCircleOutline size={22} />
-              Submit Application
+              {isSubmitting ? "Submitting..." : "Submit Application"}
             </button>
             <button
-              className="text-white underline text-lg font-semibold"
-              onClick={() => setShowForm(false)}
+              className={`text-lg font-semibold ${
+                isSubmitting
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-white underline"
+              }`}
+              onClick={() => !isSubmitting && setShowForm(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
