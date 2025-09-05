@@ -8,6 +8,7 @@ import Select from "react-select";
 import axios from "axios";
 import DOMPurify from "dompurify";
 import FormatDate from "../services/FormatDate";
+import formatCnic from "../services/FormatCnic";
 
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
@@ -46,7 +47,6 @@ const JobDetail = () => {
     referenceDesignation: "",
     referenceDepartment: "",
   });
-  const [referenceErrors, setReferenceErrors] = useState({});
   const { id } = useParams();
 
   const fetchCountryOptions = async () => {
@@ -74,16 +74,6 @@ const JobDetail = () => {
     fetchCountryOptions();
   }, []);
 
-  const formatCnic = (value) => {
-    const cleaned = value.replace(/\D/g, "");
-    if (cleaned.length <= 5) return cleaned;
-    if (cleaned.length <= 12)
-      return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}`;
-    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(
-      12,
-      13
-    )}`;
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -228,7 +218,6 @@ const JobDetail = () => {
     }
 
     setErrors(newErrors);
-    setReferenceErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -241,7 +230,6 @@ const JobDetail = () => {
         referenceDesignation: "",
         referenceDepartment: "",
       });
-      setReferenceErrors({});
       const newErrors = { ...errors };
       delete newErrors.referenceName;
       delete newErrors.referenceDesignation;
@@ -321,13 +309,39 @@ const JobDetail = () => {
             P_EXPECTED_SALARY: formData?.expectedSalary,
             P_HIGHEST_EDUCATION: formData?.highestEducation,
             P_REFERENCE: referenceFields?.referenceName,
-            P_AVAILABLE_FROM: FormatDate(availableFrom),
+            P_AVAILABLE_FROM:availableFrom,
             P_COUNTRY: selectedCountry?.value,
             P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
             P_REF_DESIGNATION: referenceFields?.referenceDesignation,
             P_JOB_ID: id,
           }
         );
+        console.log( {
+            P_FIRST_NAME: formData?.firstName,
+            P_LAST_NAME: formData?.lastName,
+            P_CNIC: formData?.cnic,
+            P_EMAIL: formData?.email,
+            P_PHONE: formData?.phone,
+            P_BIRTH_DATE: FormatDate(formData?.dob),
+            P_GENDER: formData?.gender,
+            P_MARITAL_STATUS: formData?.maritalStatus,
+            P_EXPERIENCE: `${formData?.experience}Year`,
+            P_ADDRESS: formData?.address,
+            P_CITY: formData?.city,
+            P_PROVINCE: formData?.province,
+            P_POSTAL_CODE: formData?.postalCode,
+            P_CURRENT_EMPLOYER: formData?.currentEmployer,
+            P_CURRENT_DESIGNATION: formData?.currentDesignation,
+            P_CURRENT_SALARY: formData?.currentSalary,
+            P_EXPECTED_SALARY: formData?.expectedSalary,
+            P_HIGHEST_EDUCATION: formData?.highestEducation,
+            P_REFERENCE: referenceFields?.referenceName,
+            P_AVAILABLE_FROM:availableFrom,
+            P_COUNTRY: selectedCountry?.value,
+            P_REF_DEPARTMENT: referenceFields?.referenceDepartment,
+            P_REF_DESIGNATION: referenceFields?.referenceDesignation,
+            P_JOB_ID: id,
+          })
 
         // console.log(response, "Response from backend");
         
@@ -368,7 +382,6 @@ const JobDetail = () => {
             });
             setAvailableFrom("");
             setErrors({});
-            setReferenceErrors({});
             setSubmitted(false);
             setIsSubmitting(false); // NEW: Reset submitting state
           }, 2000);
@@ -415,7 +428,6 @@ const JobDetail = () => {
       setResumeFile(null);
       setAvailableFrom("");
       setErrors({});
-      setReferenceErrors({});
       setIsSubmitting(false); // NEW: Reset submitting state when form closes
     }
   }, [showForm]);
