@@ -579,7 +579,7 @@ const JobDetail = () => {
                           <label className="block text-sm font-medium mb-1">
                             Date of Birth*
                           </label>
-                          {!formData.dob && (
+                          
                             <input
                               type="date"
                               name="dob"
@@ -591,12 +591,7 @@ const JobDetail = () => {
                                   : "border-gray-300"
                               } rounded-md outline-none text-gray-500 px-3 py-2 w-[100%]`}
                             />
-                          )}
-                          {formData.dob && (
-                            <p className="text-md text-gray-500 mt-1 rounded-md outline-none border border-gray-300 px-3 py-2 w-[100%]">
-                              {FormatDate(formData.dob)}
-                            </p>
-                          )}
+                         
                           {errors.dob && (
                             <p className="text-red-500 text-xs mt-1">
                               {errors.dob}
@@ -966,21 +961,17 @@ const JobDetail = () => {
                       {/* Notice Period */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
-                          Notice Period*
+                          Notice Period in Days*
                         </label>
-                        {!availableFrom && (
+                        
                           <input
-                            type="date"
+                            type="number"
                             value={availableFrom}
                             onChange={(e) => setAvailableFrom(e.target.value)}
+                            min={0}
                             className="w-[45%] border border-gray-300 rounded-md outline-none text-gray-500 px-3 py-2"
                           />
-                        )}
-                        {availableFrom && (
-                          <p className="text-md text-gray-500 mt-1 rounded-md outline-none border border-gray-300 px-3 py-2 w-[45%]">
-                            {FormatDate(availableFrom)}
-                          </p>
-                        )}
+                        
                         {errors.availableFrom && (
                           <p className="text-red-500 text-xs mt-1">
                             {errors.availableFrom}
