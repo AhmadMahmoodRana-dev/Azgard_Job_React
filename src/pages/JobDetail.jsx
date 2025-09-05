@@ -8,7 +8,7 @@ import Select from "react-select";
 import axios from "axios";
 import DOMPurify from "dompurify";
 import FormatDate from "../services/FormatDate";
-import formatCnic from "../services/FormatCnic";
+import formatCnic from "../services/formatCnic";
 
 const JobDetail = () => {
   const [showForm, setShowForm] = useState(false);
